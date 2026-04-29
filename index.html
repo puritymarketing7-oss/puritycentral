@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Central Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1><i class="fa-solid fa-microchip"></i> ESP32 Central Control</h1>
+            <p>Monitoreo y Configuración en Tiempo Real</p>
+        </header>
+
+        <main id="devices-grid" class="devices-grid">
+            <!-- Devices will be injected here via JS -->
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Conectando a Firebase...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para Configurar -->
+    <div id="config-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn" id="close-modal">&times;</span>
+            <h2 id="modal-title">Configurar Máquina</h2>
+            
+            <div class="modal-tabs">
+                <button class="tab-btn active" data-tab="tab-general">General</button>
+                <button class="tab-btn" data-tab="tab-tarifas">Tarifas</button>
+                <button class="tab-btn" data-tab="tab-salas">Salas</button>
+                <button class="tab-btn" data-tab="tab-qr">Promo QR</button>
+            </div>
+
+            <form id="config-form">
+                <input type="hidden" id="edit-mac">
+                
+                <!-- TAB GENERAL -->
+                <div id="tab-general" class="tab-content active">
+                    <div class="form-group">
+                        <label>Nombre del Dispositivo</label>
+                        <input type="text" id="cfg_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Piso Asignado (1-7)</label>
+                        <input type="number" id="cfg_piso" min="1" max="7" required>
+                    </div>
+                    <div class="danger-zone">
+                        <h3><i class="fa-solid fa-triangle-exclamation"></i> Zona de Peligro</h3>
+                        <button type="button" id="btn-reboot" class="btn btn-danger"><i class="fa-solid fa-power-off"></i> Reiniciar Dispositivo</button>
+                    </div>
+                </div>
+
+                <!-- TAB TARIFAS -->
+                <div id="tab-tarifas" class="tab-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Precio por Pulso ($)</label>
+                            <input type="number" id="cfg_precio_pulso" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Pulsos para 1 Hora</label>
+                            <input type="number" id="cfg_pesos_1h" required>
+                        </div>
+                    </div>
+                    <h4>Opciones Rápidas</h4>
+                    <div class="tariffs-grid">
+                        <div class="tariff-col">
+                            <label>Horas Opción 1</label>
+                            <input type="number" id="cfg_h0">
+                        </div>
+                        <div class="tariff-col">
+                            <label>Pulsos Opción 1</label>
+                            <input type="number" id="cfg_p0">
+                        </div>
+                        <div class="tariff-col">
+                            <label>Horas Opción 2</label>
+                            <input type="number" id="cfg_h1">
+                        </div>
+                        <div class="tariff-col">
+                            <label>Pulsos Opción 2</label>
+                            <input type="number" id="cfg_p1">
+                        </div>
+                        <div class="tariff-col">
+                            <label>Horas Opción 3</label>
+                            <input type="number" id="cfg_h2">
+                        </div>
+                        <div class="tariff-col">
+                            <label>Pulsos Opción 3</label>
+                            <input type="number" id="cfg_p2">
+                        </div>
+                        <div class="tariff-col">
+                            <label>Horas Opción 4</label>
+                            <input type="number" id="cfg_h3">
+                        </div>
+                        <div class="tariff-col">
+                            <label>Pulsos Opción 4</label>
+                            <input type="number" id="cfg_p3">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB SALAS -->
+                <div id="tab-salas" class="tab-content">
+                    <p class="tab-desc">Mapeo de los casilleros visuales (1-20) al hardware real.</p>
+                    <div class="salas-grid" id="salas-inputs-container">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+
+                <!-- TAB QR -->
+                <div id="tab-qr" class="tab-content">
+                    <div class="form-group toggle-group">
+                        <label class="switch">
+                            <input type="checkbox" id="cfg_demo_qr">
+                            <span class="slider round"></span>
+                        </label>
+                        <span>Habilitar Límite Demo QR</span>
+                    </div>
+                    <div class="form-group" id="group_max_usos">
+                        <label>Máximo de Usos Permitidos</label>
+                        <input type="number" id="cfg_max_usos">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div id="toast-container"></div>
+
+    <!-- Firebase JS SDK (Modular) -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
