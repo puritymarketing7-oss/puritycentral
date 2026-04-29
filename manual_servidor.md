@@ -81,11 +81,25 @@ Tu carpeta `servercentral` contiene los archivos `index.html`, `style.css` y `ap
 
 La forma más fácil y 100% gratuita es usar **Vercel** o **GitHub Pages**:
 
-### Método Recomendado: Vercel Drop
-1. Ingresá a [vercel.com](https://vercel.com/) y creá una cuenta gratuita.
-2. Descargá el programa **Vercel CLI** o simplemente arrastrá y soltá la carpeta `servercentral` entera dentro del panel de Vercel (opción "Drag and Drop deployment").
-3. En segundos, Vercel te dará un enlace público permanente (ej. `tu-panel-central.vercel.app`).
-4. ¡Listo! Podés guardar ese enlace como favorito en el navegador de tu celular y PC.
+### Método Recomendado: Usando GitHub y Vercel (Paso a Paso)
+
+Este es el método más seguro y profesional. Cada vez que actualices tus archivos en la nube (GitHub), tu página (Vercel) se actualizará automáticamente.
+
+**Fase 1: Subir tu código a GitHub**
+1. Ve a [github.com](https://github.com/) y crea una cuenta (haz clic en "Sign up").
+2. Una vez dentro, haz clic en el botón verde **"New"** (o "Create repository").
+3. En **"Repository name"**, ponle un nombre a tu panel (ej. `panel-central-esp32`), déjalo en **Public** y haz clic en el botón verde **"Create repository"**.
+4. En la siguiente pantalla, haz clic en el pequeño enlace que dice **"uploading an existing file"**.
+5. Arrastra todos los archivos de tu carpeta `servercentral` (que son `index.html`, `style.css` y `app.js`) a esa ventana.
+6. Espera que carguen, baja y haz clic en el botón verde **"Commit changes"**. ¡Tu código ya está en internet!
+
+**Fase 2: Conectar y Publicar con Vercel**
+1. Ve a [vercel.com](https://vercel.com/) y asegúrate de tener una cuenta iniciada.
+2. En el panel principal, haz clic en el botón negro **"Add New..."** (arriba a la derecha) y selecciona **"Project"**.
+3. En el panel izquierdo "Import Git Repository", haz clic para conectar con GitHub (suele decir **"Continue with GitHub"**) y acepta los permisos.
+4. Ahora verás el repositorio que creaste recién (ej. `panel-central-esp32`). Haz clic en el botón **"Import"** que está a su lado.
+5. Te llevará a la pantalla de configuración final. No toques nada, simplemente haz clic en el botón azul **"Deploy"**.
+6. ¡Listo! Tras unos segundos de carga, verás la celebración en pantalla y Vercel te dará el enlace web público permanente (ej. `panel-central-esp32.vercel.app`). Guarda ese enlace en tu celular.
 
 ## Resumen de Datos que necesitás poner en tu Código
 
