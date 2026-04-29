@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
+
 <body>
     <div class="background-blobs">
         <div class="blob blob-1"></div>
@@ -34,7 +36,7 @@
         <div class="modal-content glass-panel">
             <span class="close-btn" id="close-modal">&times;</span>
             <h2 id="modal-title">Configurar Máquina</h2>
-            
+
             <div class="modal-tabs">
                 <button class="tab-btn active" data-tab="tab-general">General</button>
                 <button class="tab-btn" data-tab="tab-tarifas">Tarifas</button>
@@ -44,7 +46,7 @@
 
             <form id="config-form">
                 <input type="hidden" id="edit-mac">
-                
+
                 <!-- TAB GENERAL -->
                 <div id="tab-general" class="tab-content active">
                     <div class="form-group">
@@ -57,7 +59,8 @@
                     </div>
                     <div class="danger-zone">
                         <h3><i class="fa-solid fa-triangle-exclamation"></i> Zona de Peligro</h3>
-                        <button type="button" id="btn-reboot" class="btn btn-danger"><i class="fa-solid fa-power-off"></i> Reiniciar Dispositivo</button>
+                        <button type="button" id="btn-reboot" class="btn btn-danger"><i
+                                class="fa-solid fa-power-off"></i> Reiniciar Dispositivo</button>
                     </div>
                 </div>
 
@@ -134,7 +137,8 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar
+                        Cambios</button>
                 </div>
             </form>
         </div>
@@ -146,4 +150,5 @@
     <!-- Firebase JS SDK (Modular) -->
     <script type="module" src="app.js"></script>
 </body>
+
 </html>
