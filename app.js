@@ -55,7 +55,7 @@ onValue(devicesRef, (snapshot) => {
         const device = data[mac];
         const info = device.info || {};
         const stats = device.stats || {};
-        
+
         // Calcular Estado (Si el último ping fue hace menos de 120 segundos = Online)
         const isOnline = (now - (info.last_seen || 0)) < 120;
         const statusClass = isOnline ? 'online' : 'offline';
@@ -104,7 +104,7 @@ onValue(devicesRef, (snapshot) => {
 });
 
 // Lógica del Modal
-window.openConfig = function(mac) {
+window.openConfig = function (mac) {
     const device = globalDevicesData[mac];
     if (!device) return;
 
@@ -117,28 +117,28 @@ window.openConfig = function(mac) {
     document.getElementById('cfg_piso').value = cfg.piso || 1;
     document.getElementById('cfg_precio_pulso').value = cfg.precio_pulso || 100;
     document.getElementById('cfg_pesos_1h').value = cfg.pesos_1h || 10;
-    
+
     document.getElementById('cfg_demo_qr').checked = cfg.demo_qr || false;
     document.getElementById('cfg_max_usos').value = cfg.max_usos_demo || 100;
 
-    const horas = cfg.horas || [0,0,0,0];
-    const pesos = cfg.pesos || [0,0,0,0];
-    for(let i=0; i<4; i++){
+    const horas = cfg.horas || [0, 0, 0, 0];
+    const pesos = cfg.pesos || [0, 0, 0, 0];
+    for (let i = 0; i < 4; i++) {
         document.getElementById(`cfg_h${i}`).value = horas[i];
         document.getElementById(`cfg_p${i}`).value = pesos[i];
     }
 
     const salas = cfg.salas || Array(20).fill(0);
-    for(let i=0; i<20; i++){
+    for (let i = 0; i < 20; i++) {
         const input = document.getElementById(`cfg_s${i}`);
-        if(input) input.value = salas[i];
+        if (input) input.value = salas[i];
     }
 
     modal.classList.add('show');
 };
 
 closeModal.onclick = () => modal.classList.remove('show');
-window.onclick = (e) => { if(e.target === modal) modal.classList.remove('show'); };
+window.onclick = (e) => { if (e.target === modal) modal.classList.remove('show'); };
 
 // Pestañas (Tabs)
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -164,21 +164,21 @@ toggleDemo.addEventListener('change', (e) => {
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const mac = document.getElementById('edit-mac').value;
-    
+
     // Recolectar datos
     const horas = [], pesos = [], salas = [];
-    for(let i=0; i<4; i++){
+    for (let i = 0; i < 4; i++) {
         horas.push(parseInt(document.getElementById(`cfg_h${i}`).value) || 0);
         pesos.push(parseInt(document.getElementById(`cfg_p${i}`).value) || 0);
     }
-    for(let i=0; i<20; i++){
+    for (let i = 0; i < 20; i++) {
         salas.push(parseInt(document.getElementById(`cfg_s${i}`).value) || 0);
     }
 
     const updates = {};
     // Update Info
     updates[`devices/${mac}/info/name`] = document.getElementById('cfg_name').value;
-    
+
     // Update Config
     const configPath = `devices/${mac}/config`;
     updates[`${configPath}/piso`] = parseInt(document.getElementById('cfg_piso').value) || 1;
@@ -203,7 +203,7 @@ form.addEventListener('submit', async (e) => {
 // Botón Reiniciar
 document.getElementById('btn-reboot').addEventListener('click', async () => {
     const mac = document.getElementById('edit-mac').value;
-    if(confirm('¿Estás seguro que querés forzar el reinicio de este ESP32? Interrumpirá transacciones en curso.')){
+    if (confirm('¿Estás seguro que querés forzar el reinicio de este ESP32? Interrumpirá transacciones en curso.')) {
         try {
             await update(ref(db), { [`devices/${mac}/info/reboot`]: true });
             showToast('Comando de reinicio enviado.', 'success');
@@ -221,8 +221,8 @@ function showToast(message, type = 'success') {
     toast.className = `toast ${type}`;
     toast.innerHTML = `<i class="fa-solid ${type === 'success' ? 'fa-check-circle' : 'fa-circle-xmark'}"></i> ${message}`;
     container.appendChild(toast);
-    
+
     setTimeout(() => {
-        if(container.contains(toast)) container.removeChild(toast);
+        if (container.contains(toast)) container.removeChild(toast);
     }, 3000);
 }
