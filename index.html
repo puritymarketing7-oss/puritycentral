@@ -20,9 +20,23 @@
         <header>
             <h1><i class="fa-solid fa-microchip"></i> ESP32 Central Control</h1>
             <p>Monitoreo y Configuración en Tiempo Real</p>
+            <button id="btn-change-pass" class="btn" style="display:none; position:absolute; top:20px; right:110px;"><i class="fa-solid fa-key"></i> Clave</button>
+            <button id="btn-logout" class="btn" style="display:none; position:absolute; top:20px; right:20px;"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
         </header>
 
-        <main id="devices-grid" class="devices-grid">
+        <!-- Pantalla de Login -->
+        <div id="login-screen" style="text-align: center; margin-top: 50px;">
+            <div class="glass-panel" style="display: inline-block; padding: 40px; border-radius: 15px;">
+                <h2><i class="fa-solid fa-lock"></i> Acceso Restringido</h2>
+                <p>Ingresá la contraseña para acceder al panel.</p>
+                <input type="password" id="login-password" class="form-group" style="width: 80%; padding: 10px; margin-top: 20px; margin-bottom: 20px; border-radius: 5px; border: none;" placeholder="Contraseña">
+                <br>
+                <button id="btn-login" class="btn btn-primary">Ingresar</button>
+                <p id="login-error" style="color: var(--danger-color); display: none; margin-top: 15px;">Contraseña incorrecta</p>
+            </div>
+        </div>
+
+        <main id="devices-grid" class="devices-grid" style="display: none;">
             <!-- Devices will be injected here via JS -->
             <div class="loading-state">
                 <div class="spinner"></div>

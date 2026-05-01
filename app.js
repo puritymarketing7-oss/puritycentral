@@ -37,6 +37,145 @@ function initSalasInputs() {
 }
 initSalasInputs();
 
+// =========================================================================
+// SISTEMA DE LOGIN Y SEGURIDAD (ANTI BRUTE-FORCE)
+// =========================================================================
+const loginScreen = document.getElementById('login-screen');
+const devicesGridContainer = document.getElementById('devices-grid');
+const btnLogin = document.getElementById('btn-login');
+const passInput = document.getElementById('login-password');
+const loginError = document.getElementById('login-error');
+const btnLogout = document.getElementById('btn-logout');
+const btnChangePass = document.getElementById('btn-change-pass');
+const passModal = document.getElementById('password-modal');
+
+let currentPasswordHash = "";
+
+// Hashear la contraseña (Seguridad para que no se vea en texto plano en la base de datos)
+async function hashPassword(password) {
+    const msgBuffer = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Sincronizar el hash de Firebase
+const adminRef = ref(db, 'admin');
+onValue(adminRef, async (snapshot) => {
+    const data = snapshot.val();
+    if (data && data.password_hash) {
+        currentPasswordHash = data.password_hash;
+    } else {
+        // Si es la primera vez, crear el hash de "puritymartin" por defecto
+        currentPasswordHash = await hashPassword("puritymartin");
+        update(ref(db), { 'admin/password_hash': currentPasswordHash });
+    }
+});
+
+function checkLogin() {
+    if (sessionStorage.getItem('isLogged') === 'true') {
+        loginScreen.style.display = 'none';
+        devicesGridContainer.style.display = 'grid';
+        btnLogout.style.display = 'block';
+        btnChangePass.style.display = 'block';
+    } else {
+        loginScreen.style.display = 'block';
+        devicesGridContainer.style.display = 'none';
+        btnLogout.style.display = 'none';
+        btnChangePass.style.display = 'none';
+    }
+}
+
+// Sistema Anti-Brute Force (Guardado en memoria local del navegador)
+function getLockoutTime() { return parseInt(localStorage.getItem('lockoutTime')) || 0; }
+function getFailedAttempts() { return parseInt(localStorage.getItem('failedAttempts')) || 0; }
+function setLockout(attempts, time) {
+    localStorage.setItem('failedAttempts', attempts);
+    localStorage.setItem('lockoutTime', time);
+}
+
+btnLogin.addEventListener('click', async () => {
+    const now = Date.now();
+    const lockoutTime = getLockoutTime();
+    
+    // 1. Revisar si está bloqueado
+    if (now < lockoutTime) {
+        const waitMinutes = Math.ceil((lockoutTime - now) / 60000);
+        loginError.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Bloqueado por seguridad. Intentá en ${waitMinutes} min.`;
+        loginError.style.display = 'block';
+        return;
+    }
+
+    if (!currentPasswordHash) {
+        loginError.innerHTML = "Conectando al servidor, aguardá 2 seg...";
+        loginError.style.display = 'block';
+        return;
+    }
+
+    // 2. Verificar contraseña
+    const inputHash = await hashPassword(passInput.value);
+    if (inputHash === currentPasswordHash) {
+        sessionStorage.setItem('isLogged', 'true');
+        setLockout(0, 0); // Resetear intentos
+        loginError.style.display = 'none';
+        passInput.value = '';
+        checkLogin();
+    } else {
+        let attempts = getFailedAttempts() + 1;
+        if (attempts >= 3) {
+            // Bloqueo de 5 minutos al 3er intento fallido
+            setLockout(attempts, now + 5 * 60 * 1000);
+            loginError.innerHTML = `<i class="fa-solid fa-shield"></i> Límite excedido. Bloqueo de 5 minutos.`;
+        } else {
+            setLockout(attempts, 0);
+            loginError.innerHTML = `Clave incorrecta. Te quedan ${3 - attempts} intentos.`;
+        }
+        loginError.style.display = 'block';
+    }
+});
+
+passInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') btnLogin.click(); });
+btnLogout.addEventListener('click', () => { sessionStorage.removeItem('isLogged'); checkLogin(); });
+
+// Modal de Cambio de Clave
+btnChangePass.onclick = () => passModal.classList.add('show');
+document.getElementById('close-pass-modal').onclick = () => passModal.classList.remove('show');
+
+document.getElementById('btn-save-pass').addEventListener('click', async () => {
+    const oldPass = document.getElementById('old-pass').value;
+    const newPass = document.getElementById('new-pass').value;
+    
+    if (!oldPass || !newPass) {
+        showToast('Completá ambos campos', 'error');
+        return;
+    }
+    
+    const oldHash = await hashPassword(oldPass);
+    if (oldHash !== currentPasswordHash) {
+        showToast('La contraseña actual es incorrecta', 'error');
+        return;
+    }
+    
+    if (newPass.length < 6) {
+        showToast('La nueva clave debe tener mínimo 6 letras', 'error');
+        return;
+    }
+    
+    const newHash = await hashPassword(newPass);
+    try {
+        await update(ref(db), { 'admin/password_hash': newHash });
+        showToast('¡Contraseña actualizada en la nube!', 'success');
+        passModal.classList.remove('show');
+        document.getElementById('old-pass').value = '';
+        document.getElementById('new-pass').value = '';
+    } catch(e) {
+        showToast('Error al actualizar', 'error');
+    }
+});
+
+// Inicializar estado
+checkLogin();
+
 // Escuchar cambios en la base de datos (Realtime)
 const devicesRef = ref(db, 'devices');
 onValue(devicesRef, (snapshot) => {
