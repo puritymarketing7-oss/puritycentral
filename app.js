@@ -255,6 +255,7 @@ window.openConfig = function (mac) {
 
     const info = device.info || {};
     const cfg = device.config || {};
+    const stats = device.stats || {};
 
     // Cargar datos al formulario
     document.getElementById('edit-mac').value = mac;
@@ -277,6 +278,36 @@ window.openConfig = function (mac) {
     for (let i = 0; i < 20; i++) {
         const input = document.getElementById(`cfg_s${i}`);
         if (input) input.value = salas[i];
+    }
+
+    // --- Pestaña Historial ---
+    // Billetes
+    const billetes = stats.billetes || [0, 0, 0, 0];
+    for (let i = 0; i < 4; i++) {
+        const el = document.getElementById(`hist_bill${i}`);
+        if (el) el.textContent = (billetes[i] || 0).toLocaleString();
+    }
+
+    // Últimas 5 transacciones
+    const historial = stats.historial || [];
+    const tbody = document.getElementById('hist_table_body');
+    if (tbody) {
+        if (historial.length === 0 || historial.every(t => (t.sala || 0) === 0 && (t.hora || 0) === 0)) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-secondary);">Sin datos aún</td></tr>';
+        } else {
+            tbody.innerHTML = '';
+            historial.forEach((t, idx) => {
+                const sala = t.sala || 0;
+                const hora = t.hora || 0;
+                if (sala === 0 && hora === 0) return; // Saltar vacíos
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${idx + 1}</td><td>${sala}</td><td>${hora}h</td>`;
+                tbody.appendChild(tr);
+            });
+            if (tbody.children.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-secondary);">Sin datos aún</td></tr>';
+            }
+        }
     }
 
     modal.classList.add('show');

@@ -581,6 +581,73 @@ input:checked+.slider:before {
     }
 }
 
+/* Bills Grid (Historial Tab) */
+.bills-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.bill-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 1rem 0.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    transition: border-color 0.2s;
+}
+
+.bill-card:hover {
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.bill-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.bill-count {
+    font-size: 1.5rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* History Table */
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.75rem;
+}
+
+.history-table th,
+.history-table td {
+    padding: 0.6rem 0.75rem;
+    text-align: center;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.history-table th {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.history-table td {
+    font-size: 0.95rem;
+}
+
+.history-table tbody tr:hover {
+    background: rgba(56, 189, 248, 0.05);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .container {
@@ -595,5 +662,9 @@ input:checked+.slider:before {
     .modal-content {
         padding: 1.5rem;
         width: 95%;
+    }
+
+    .bills-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
