@@ -59,6 +59,11 @@ async function hashPassword(password) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Inicializar un hash de emergencia inmediatamente por si Firebase tarda en responder
+hashPassword("puritymartin").then(h => {
+    if (!currentPasswordHash) currentPasswordHash = h;
+});
+
 // Sincronizar el hash de Firebase
 const adminRef = ref(db, 'admin');
 onValue(adminRef, async (snapshot) => {
@@ -66,23 +71,30 @@ onValue(adminRef, async (snapshot) => {
     if (data && data.password_hash) {
         currentPasswordHash = data.password_hash;
     } else {
-        // Si es la primera vez, crear el hash de "puritymartin" por defecto
-        currentPasswordHash = await hashPassword("puritymartin");
-        update(ref(db), { 'admin/password_hash': currentPasswordHash });
+        // Si es la primera vez, guardar el hash por defecto en la nube
+        const defaultHash = await hashPassword("puritymartin");
+        currentPasswordHash = defaultHash;
+        try {
+            update(ref(db), { 'admin/password_hash': defaultHash });
+        } catch(e) {
+            console.warn("No se pudo guardar el hash en la nube.");
+        }
     }
+}, async (error) => {
+    loginError.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Firebase falló. Usando modo local.`;
+    loginError.style.display = 'block';
 });
 
 function checkLogin() {
+    const adminActions = document.getElementById('admin-actions');
     if (sessionStorage.getItem('isLogged') === 'true') {
         loginScreen.style.display = 'none';
         devicesGridContainer.style.display = 'grid';
-        btnLogout.style.display = 'block';
-        btnChangePass.style.display = 'block';
+        if(adminActions) adminActions.style.display = 'flex';
     } else {
         loginScreen.style.display = 'block';
         devicesGridContainer.style.display = 'none';
-        btnLogout.style.display = 'none';
-        btnChangePass.style.display = 'none';
+        if(adminActions) adminActions.style.display = 'none';
     }
 }
 
@@ -102,12 +114,6 @@ btnLogin.addEventListener('click', async () => {
     if (now < lockoutTime) {
         const waitMinutes = Math.ceil((lockoutTime - now) / 60000);
         loginError.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Bloqueado por seguridad. Intentá en ${waitMinutes} min.`;
-        loginError.style.display = 'block';
-        return;
-    }
-
-    if (!currentPasswordHash) {
-        loginError.innerHTML = "Conectando al servidor, aguardá 2 seg...";
         loginError.style.display = 'block';
         return;
     }

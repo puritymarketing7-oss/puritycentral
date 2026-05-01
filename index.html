@@ -20,8 +20,6 @@
         <header>
             <h1><i class="fa-solid fa-microchip"></i> ESP32 Central Control</h1>
             <p>Monitoreo y Configuración en Tiempo Real</p>
-            <button id="btn-change-pass" class="btn" style="display:none; position:absolute; top:20px; right:110px;"><i class="fa-solid fa-key"></i> Clave</button>
-            <button id="btn-logout" class="btn" style="display:none; position:absolute; top:20px; right:20px;"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
         </header>
 
         <!-- Pantalla de Login -->
@@ -43,6 +41,12 @@
                 <p>Conectando a Firebase...</p>
             </div>
         </main>
+
+        <!-- Admin Actions Footer -->
+        <div id="admin-actions" style="display: none; justify-content: center; gap: 1rem; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--glass-border);">
+            <button id="btn-change-pass" class="btn" style="width: auto; padding: 0.75rem 2rem;"><i class="fa-solid fa-key"></i> Cambiar Clave</button>
+            <button id="btn-logout" class="btn btn-danger" style="width: auto; padding: 0.75rem 2rem;"><i class="fa-solid fa-right-from-bracket"></i> Salir del Panel</button>
+        </div>
     </div>
 
     <!-- Modal para Configurar -->
