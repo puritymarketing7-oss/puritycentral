@@ -5,9 +5,9 @@ import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/fireb
 // CONFIGURACIÓN DE FIREBASE (¡Completar con los datos del Paso 2 y 4!)
 // =========================================================================
 const firebaseConfig = {
-    apiKey: "PEGAR_AQUI_TU_API_KEY",
-    databaseURL: "https://PEGAR-AQUI-TU-URL.firebaseio.com",
-    projectId: "PEGAR-AQUI-TU-PROJECT-ID",
+    apiKey: "AIzaSyDTyBkvph-yN6BdyL-k3o5X7bjYDRLKRq8",
+    databaseURL: "https://tvcentralpurity-default-rtdb.firebaseio.com",
+    projectId: "tvcentralpurity",
 };
 
 // Inicializar Firebase
