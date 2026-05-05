@@ -19,52 +19,117 @@
     <div class="container">
         <header>
             <h1><i class="fa-solid fa-microchip"></i> ESP32 Central Control</h1>
-            <p>Monitoreo y Configuración en Tiempo Real</p>
+            <p>Monitoreo y Configuracion en Tiempo Real</p>
         </header>
+
+        <!-- Barra de usuario logueado -->
+        <div id="user-info-bar" style="display:none; justify-content:center; align-items:center; gap:0.5rem; margin-bottom:1.5rem; padding:0.5rem 1rem; border-radius:8px; background:var(--glass-bg); border:1px solid var(--glass-border);">
+            <i class="fa-solid fa-user" style="color:var(--accent-color)"></i>
+            <span style="color:var(--text-secondary)">Sesion:</span>
+            <strong id="ui-username" style="color:var(--accent-color)">admin</strong>
+            <span style="color:var(--text-secondary);font-size:0.8rem;background:rgba(56,189,248,0.15);padding:2px 10px;border-radius:999px;" id="ui-role">Admin</span>
+        </div>
 
         <!-- Pantalla de Login -->
         <div id="login-screen" style="text-align: center; margin-top: 50px;">
             <div class="glass-panel" style="display: inline-block; padding: 40px; border-radius: 15px;">
                 <h2><i class="fa-solid fa-lock"></i> Acceso Restringido</h2>
-                <p>Ingresá la contraseña para acceder al panel.</p>
-                <input type="password" id="login-password" class="form-group" style="width: 80%; padding: 10px; margin-top: 20px; margin-bottom: 20px; border-radius: 5px; border: none;" placeholder="Contraseña">
+                <p>Ingresa usuario y contraseña para acceder al panel.</p>
+                <input type="text" id="login-user" class="form-group" style="width:80%;padding:10px;margin-top:20px;margin-bottom:10px;border-radius:5px;border:none;" placeholder="Usuario" autocomplete="username">
+                <input type="password" id="login-password" class="form-group" style="width:80%;padding:10px;margin-bottom:20px;border-radius:5px;border:none;" placeholder="Contraseña" autocomplete="current-password">
                 <br>
                 <button id="btn-login" class="btn btn-primary">Ingresar</button>
-                <p id="login-error" style="color: var(--danger-color); display: none; margin-top: 15px;">Contraseña incorrecta</p>
+                <p id="login-error" style="color: var(--danger-color); display: none; margin-top: 15px;">Usuario o clave incorrecta</p>
             </div>
         </div>
 
         <main id="devices-grid" class="devices-grid" style="display: none;">
-            <!-- Devices will be injected here via JS -->
             <div class="loading-state">
                 <div class="spinner"></div>
                 <p>Conectando a Firebase...</p>
             </div>
         </main>
 
-        <!-- Admin Actions Footer -->
-        <div id="admin-actions" style="display: none; justify-content: center; gap: 1rem; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--glass-border);">
-            <button id="btn-change-pass" class="btn" style="width: auto; padding: 0.75rem 2rem;"><i class="fa-solid fa-key"></i> Cambiar Clave</button>
+        <!-- Acciones del panel -->
+        <div id="admin-actions" style="display: none; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--glass-border);">
+            <span id="btn-users-container"></span>
+            <button id="btn-change-creds" class="btn" style="width: auto; padding: 0.75rem 2rem;"><i class="fa-solid fa-key"></i> Cambiar Usuario / Clave</button>
             <button id="btn-logout" class="btn btn-danger" style="width: auto; padding: 0.75rem 2rem;"><i class="fa-solid fa-right-from-bracket"></i> Salir del Panel</button>
         </div>
     </div>
 
-    <!-- Modal para Cambiar Clave -->
-    <div id="password-modal" class="modal">
-        <div class="modal-content glass-panel" style="max-width: 400px; text-align: center;">
-            <span class="close-btn" id="close-pass-modal">&times;</span>
-            <h2>Cambiar Contraseña</h2>
-            <input type="password" id="old-pass" class="form-group" style="width: 80%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; background: rgba(15, 23, 42, 0.6); color: white;" placeholder="Contraseña Actual">
-            <input type="password" id="new-pass" class="form-group" style="width: 80%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; background: rgba(15, 23, 42, 0.6); color: white;" placeholder="Nueva Contraseña">
-            <button id="btn-save-pass" class="btn btn-primary" style="margin-top: 15px;"><i class="fa-solid fa-floppy-disk"></i> Guardar Nueva Clave</button>
+    <!-- Modal Cambiar Usuario / Clave -->
+    <div id="creds-modal" class="modal">
+        <div class="modal-content glass-panel" style="max-width: 420px; text-align: center;">
+            <span class="close-btn" id="close-creds-modal">&times;</span>
+            <h2>Cambiar Usuario / Clave</h2>
+            <input type="password" id="old-pass" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Clave Actual (obligatorio)">
+            <input type="text" id="new-username" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Nuevo Usuario (opcional)">
+            <input type="password" id="new-pass" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Nueva Clave (opcional)">
+            <p style="color:var(--text-secondary);font-size:0.8rem;margin:0;">Deja en blanco lo que no quieras cambiar.</p>
+            <button id="btn-save-creds" class="btn btn-primary" style="margin-top:15px;"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
         </div>
     </div>
 
-    <!-- Modal para Configurar -->
+    <!-- Modal Gestionar Usuarios (ADMIN) -->
+    <div id="users-modal" class="modal">
+        <div class="modal-content glass-panel" style="max-width: 700px;">
+            <span class="close-btn" id="close-users-modal">&times;</span>
+            <h2><i class="fa-solid fa-users"></i> Gestionar Usuarios</h2>
+
+            <div class="add-user-section">
+                <h4>Agregar Usuario</h4>
+                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
+                    <div class="form-group" style="flex:1;min-width:150px;margin:0;">
+                        <label>Nombre de Usuario</label>
+                        <input type="text" id="new-user-name" placeholder="ej: operador1" style="width:100%;">
+                    </div>
+                    <div class="form-group" style="flex:1;min-width:150px;margin:0;">
+                        <label>Clave Inicial</label>
+                        <input type="text" id="new-user-pass" placeholder="min 4 caracteres" style="width:100%;">
+                    </div>
+                    <button id="btn-add-user" class="btn btn-primary" style="width:auto;padding:0.75rem 1.5rem;"><i class="fa-solid fa-plus"></i> Agregar</button>
+                </div>
+            </div>
+
+            <div style="margin-top:1.5rem;">
+                <h4>Usuarios Registrados</h4>
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Equipos Asignados</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <tr><td colspan="3" style="text-align:center;color:var(--text-secondary);">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Asignar Equipos a Usuario -->
+    <div id="device-assign-modal" class="modal">
+        <div class="modal-content glass-panel" style="max-width: 500px;">
+            <span class="close-btn" id="close-assign-modal">&times;</span>
+            <h2><i class="fa-solid fa-display"></i> Equipos de <span id="assign-username-display" style="color:var(--accent-color)"></span></h2>
+            <p style="color:var(--text-secondary);margin-bottom:1rem;">Marcar los equipos a los que este usuario tendra acceso.</p>
+            <div id="device-checkboxes" class="device-checkboxes">
+                <p style="color:var(--text-secondary)">Cargando equipos...</p>
+            </div>
+            <div class="form-actions">
+                <button id="btn-save-devices" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Asignaciones</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Configurar Maquina -->
     <div id="config-modal" class="modal">
         <div class="modal-content glass-panel">
             <span class="close-btn" id="close-modal">&times;</span>
-            <h2 id="modal-title">Configurar Máquina</h2>
+            <h2 id="modal-title">Configurar Maquina</h2>
 
             <div class="modal-tabs">
                 <button class="tab-btn active" data-tab="tab-general">General</button>
@@ -89,8 +154,7 @@
                     </div>
                     <div class="danger-zone">
                         <h3><i class="fa-solid fa-triangle-exclamation"></i> Zona de Peligro</h3>
-                        <button type="button" id="btn-reboot" class="btn btn-danger"><i
-                                class="fa-solid fa-power-off"></i> Reiniciar Dispositivo</button>
+                        <button type="button" id="btn-reboot" class="btn btn-danger"><i class="fa-solid fa-power-off"></i> Reiniciar Dispositivo</button>
                     </div>
                 </div>
 
@@ -106,49 +170,23 @@
                             <input type="number" id="cfg_pesos_1h" required>
                         </div>
                     </div>
-                    <h4>Opciones Rápidas</h4>
+                    <h4>Opciones Rapidas</h4>
                     <div class="tariffs-grid">
-                        <div class="tariff-col">
-                            <label>Horas Opción 1</label>
-                            <input type="number" id="cfg_h0">
-                        </div>
-                        <div class="tariff-col">
-                            <label>Pulsos Opción 1</label>
-                            <input type="number" id="cfg_p0">
-                        </div>
-                        <div class="tariff-col">
-                            <label>Horas Opción 2</label>
-                            <input type="number" id="cfg_h1">
-                        </div>
-                        <div class="tariff-col">
-                            <label>Pulsos Opción 2</label>
-                            <input type="number" id="cfg_p1">
-                        </div>
-                        <div class="tariff-col">
-                            <label>Horas Opción 3</label>
-                            <input type="number" id="cfg_h2">
-                        </div>
-                        <div class="tariff-col">
-                            <label>Pulsos Opción 3</label>
-                            <input type="number" id="cfg_p2">
-                        </div>
-                        <div class="tariff-col">
-                            <label>Horas Opción 4</label>
-                            <input type="number" id="cfg_h3">
-                        </div>
-                        <div class="tariff-col">
-                            <label>Pulsos Opción 4</label>
-                            <input type="number" id="cfg_p3">
-                        </div>
+                        <div class="tariff-col"><label>Horas Opcion 1</label><input type="number" id="cfg_h0"></div>
+                        <div class="tariff-col"><label>Pulsos Opcion 1</label><input type="number" id="cfg_p0"></div>
+                        <div class="tariff-col"><label>Horas Opcion 2</label><input type="number" id="cfg_h1"></div>
+                        <div class="tariff-col"><label>Pulsos Opcion 2</label><input type="number" id="cfg_p1"></div>
+                        <div class="tariff-col"><label>Horas Opcion 3</label><input type="number" id="cfg_h2"></div>
+                        <div class="tariff-col"><label>Pulsos Opcion 3</label><input type="number" id="cfg_p2"></div>
+                        <div class="tariff-col"><label>Horas Opcion 4</label><input type="number" id="cfg_h3"></div>
+                        <div class="tariff-col"><label>Pulsos Opcion 4</label><input type="number" id="cfg_p3"></div>
                     </div>
                 </div>
 
                 <!-- TAB SALAS -->
                 <div id="tab-salas" class="tab-content">
                     <p class="tab-desc">Mapeo de los casilleros visuales (1-20) al hardware real.</p>
-                    <div class="salas-grid" id="salas-inputs-container">
-                        <!-- Generado por JS -->
-                    </div>
+                    <div class="salas-grid" id="salas-inputs-container"></div>
                 </div>
 
                 <!-- TAB QR -->
@@ -158,54 +196,35 @@
                             <input type="checkbox" id="cfg_demo_qr">
                             <span class="slider round"></span>
                         </label>
-                        <span>Habilitar Límite Demo QR</span>
+                        <span>Habilitar Limite Demo QR</span>
                     </div>
                     <div class="form-group" id="group_max_usos">
-                        <label>Máximo de Usos Permitidos</label>
+                        <label>Maximo de Usos Permitidos</label>
                         <input type="number" id="cfg_max_usos">
                     </div>
                 </div>
 
                 <!-- TAB HISTORIAL -->
                 <div id="tab-historial" class="tab-content">
-                    <h4><i class="fa-solid fa-money-bill-wave"></i> Billetes Físicos Ingresados</h4>
+                    <h4><i class="fa-solid fa-money-bill-wave"></i> Billetes Fisicos Ingresados</h4>
                     <div class="bills-grid">
-                        <div class="bill-card">
-                            <span class="bill-label">$500</span>
-                            <span class="bill-count" id="hist_bill0">0</span>
-                        </div>
-                        <div class="bill-card">
-                            <span class="bill-label">$1.000</span>
-                            <span class="bill-count" id="hist_bill1">0</span>
-                        </div>
-                        <div class="bill-card">
-                            <span class="bill-label">$2.000</span>
-                            <span class="bill-count" id="hist_bill2">0</span>
-                        </div>
-                        <div class="bill-card">
-                            <span class="bill-label">$10.000</span>
-                            <span class="bill-count" id="hist_bill3">0</span>
-                        </div>
+                        <div class="bill-card"><span class="bill-label">$500</span><span class="bill-count" id="hist_bill0">0</span></div>
+                        <div class="bill-card"><span class="bill-label">$1.000</span><span class="bill-count" id="hist_bill1">0</span></div>
+                        <div class="bill-card"><span class="bill-label">$2.000</span><span class="bill-count" id="hist_bill2">0</span></div>
+                        <div class="bill-card"><span class="bill-label">$10.000</span><span class="bill-count" id="hist_bill3">0</span></div>
                     </div>
 
-                    <h4 style="margin-top: 1.5rem;"><i class="fa-solid fa-list-ol"></i> Últimas 5 Transacciones</h4>
+                    <h4 style="margin-top: 1.5rem;"><i class="fa-solid fa-list-ol"></i> Ultimas 5 Transacciones</h4>
                     <table class="history-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Sala HW</th>
-                                <th>Horas</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>#</th><th>Sala HW</th><th>Horas</th></tr></thead>
                         <tbody id="hist_table_body">
-                            <tr><td colspan="3" style="text-align:center; color: var(--text-secondary);">Sin datos aún</td></tr>
+                            <tr><td colspan="3" style="text-align:center; color: var(--text-secondary);">Sin datos aun</td></tr>
                         </tbody>
                     </table>
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar
-                        Cambios</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
                 </div>
             </form>
         </div>
