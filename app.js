@@ -136,6 +136,7 @@ function checkLogin() {
         }
         if (btnChangeCreds) btnChangeCreds.style.display = 'inline-flex';
         renderUserManagementButton();
+        renderDevices();
     } else {
         loginScreen.style.display = 'block';
         devicesGridContainer.style.display = 'none';
@@ -458,23 +459,38 @@ document.getElementById('btn-save-devices').addEventListener('click', async () =
 const devicesRef = ref(db, 'devices');
 onValue(devicesRef, (snapshot) => {
     const data = snapshot.val();
-    grid.innerHTML = '';
+    globalDevicesData = data || {};
 
-    if (!data) {
+    if (!data || Object.keys(data).length === 0) {
         grid.innerHTML = '<div class="loading-state"><p>No se encontraron dispositivos registrados.</p></div>';
-        globalDevicesData = {};
         return;
     }
 
-    globalDevicesData = data;
+    renderDevices();
+}, (error) => {
+    console.error("Error al leer Firebase:", error);
+    grid.innerHTML = `<div class="loading-state"><p style="color:var(--danger-color)">Error de conexion.</p></div>`;
+});
+
+function renderDevices() {
+    grid.innerHTML = '';
+
+    const data = globalDevicesData;
+    if (!data || Object.keys(data).length === 0) {
+        grid.innerHTML = '<div class="loading-state"><p>No se encontraron dispositivos registrados.</p></div>';
+        return;
+    }
+
     const now = Math.floor(Date.now() / 1000);
     const role = getLoggedRole();
     const allowedDevices = getAllowedDevices();
     const isAdmin = role === 'admin';
+    let anyRendered = false;
 
     Object.keys(data).forEach(mac => {
         if (!isAdmin && !allowedDevices.includes(mac)) return;
 
+        anyRendered = true;
         const device = data[mac];
         const info = device.info || {};
         const stats = device.stats || {};
@@ -521,13 +537,14 @@ onValue(devicesRef, (snapshot) => {
         grid.appendChild(card);
     });
 
-    if (grid.children.length === 0) {
-        grid.innerHTML = '<div class="loading-state"><p>No tenes equipos asignados. Contacta al administrador.</p></div>';
+    if (!anyRendered) {
+        if (isAdmin) {
+            grid.innerHTML = '<div class="loading-state"><p>No hay dispositivos registrados en Firebase.</p></div>';
+        } else {
+            grid.innerHTML = '<div class="loading-state"><p>No tenes equipos asignados. Contacta al administrador.</p></div>';
+        }
     }
-}, (error) => {
-    console.error("Error al leer Firebase:", error);
-    grid.innerHTML = `<div class="loading-state"><p style="color:var(--danger-color)">Error de conexion.</p></div>`;
-});
+}
 
 // =========================================================================
 // MODAL DE CONFIGURACION
