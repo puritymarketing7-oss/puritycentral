@@ -222,6 +222,7 @@ document.getElementById('btn-save-creds').addEventListener('click', async () => 
     const oldPass = document.getElementById('old-pass').value;
     const newUsername = document.getElementById('new-username').value.trim().toLowerCase();
     const newPass = document.getElementById('new-pass').value;
+    const newPassRepeat = document.getElementById('new-pass-repeat').value;
     const currentUser = getLoggedUser();
 
     if (!oldPass) {
@@ -258,6 +259,11 @@ document.getElementById('btn-save-creds').addEventListener('click', async () => 
         return;
     }
 
+    if (newPass && newPass !== newPassRepeat) {
+        showToast('Las claves nuevas no coinciden', 'error');
+        return;
+    }
+
     const finalHash = newPass ? await hashPassword(newPass) : currentUserData.password_hash;
 
     try {
@@ -282,6 +288,7 @@ document.getElementById('btn-save-creds').addEventListener('click', async () => 
         document.getElementById('old-pass').value = '';
         document.getElementById('new-username').value = '';
         document.getElementById('new-pass').value = '';
+        document.getElementById('new-pass-repeat').value = '';
         checkLogin();
     } catch(e) {
         showToast('Error al actualizar', 'error');
