@@ -758,6 +758,19 @@ document.getElementById('btn-reboot').addEventListener('click', async () => {
     }
 });
 
+// Boton Reset Inicios
+document.getElementById('btn-reset-inicios').addEventListener('click', async () => {
+    const mac = document.getElementById('edit-mac').value;
+    if (confirm('¿Resetear el contador de inicios a 0?')) {
+        try {
+            await update(ref(db), { [`devices/${mac}/config/reset_inicios`]: true });
+            showToast('Contador de inicios reseteado.', 'success');
+        } catch (error) {
+            showToast('Error al resetear inicios.', 'error');
+        }
+    }
+});
+
 // =========================================================================
 // TOASTS
 // =========================================================================
