@@ -497,6 +497,7 @@ function renderDevices() {
         const device = data[mac];
         const info = device.info || {};
         const stats = device.stats || {};
+        const cfg = device.config || {};
 
         const isOnline = (now - (info.last_seen || 0)) < 120;
         const statusClass = isOnline ? 'online' : 'offline';
@@ -517,12 +518,8 @@ function renderDevices() {
             </div>
             <div class="card-body">
                 <div class="stat-row">
-                    <span class="stat-label"><i class="fa-solid fa-sack-dollar"></i> Recaudacion QR</span>
-                    <span class="stat-value">$${(stats.monto_total_qr || 0).toLocaleString()}</span>
-                </div>
-                <div class="stat-row">
-                    <span class="stat-label"><i class="fa-solid fa-qrcode"></i> Usos QR</span>
-                    <span class="stat-value">${stats.usos_qr || 0}</span>
+                    <span class="stat-label"><i class="fa-solid fa-layer-group"></i> Piso</span>
+                    <span class="stat-value">${cfg.piso || 1}</span>
                 </div>
                 <div class="stat-row">
                     <span class="stat-label"><i class="fa-solid fa-power-off"></i> Inicios Totales</span>
@@ -568,6 +565,12 @@ window.openConfig = function (mac) {
     document.getElementById('cfg_pesos_1h').value = cfg.pesos_1h || 10;
     document.getElementById('cfg_demo_qr').checked = cfg.demo_qr || false;
     document.getElementById('cfg_max_usos').value = cfg.max_usos_demo || 110;
+
+    // Stats QR (solo lectura en pestaña Promo QR)
+    const qrRec = document.getElementById('qr_recaudacion');
+    if (qrRec) qrRec.value = '$' + ((stats.monto_total_qr || 0).toLocaleString());
+    const qrUsos = document.getElementById('qr_usos');
+    if (qrUsos) qrUsos.value = stats.usos_qr || 0;
 
     const horas = cfg.horas || [0, 0, 0, 0];
     const pesos = cfg.pesos || [0, 0, 0, 0];
