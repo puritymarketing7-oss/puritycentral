@@ -43,7 +43,10 @@ function initSalasInputs() {
     for (let i = 0; i < 20; i++) {
         const div = document.createElement('div');
         div.className = 'sala-input-wrap';
-        div.innerHTML = `<label>S${i + 1}</label><input type="number" id="cfg_s${i}" value="0">`;
+        div.innerHTML = `
+            <label>S${i + 1}</label>
+            <input type="number" id="cfg_s${i}" min="0" max="31" value="0" oninput="this.value=Math.max(0,Math.min(31,parseInt(this.value)||0))">
+        `;
         salasContainer.appendChild(div);
     }
 }
@@ -564,7 +567,7 @@ window.openConfig = function (mac) {
     document.getElementById('cfg_precio_pulso').value = cfg.precio_pulso || 100;
     document.getElementById('cfg_pesos_1h').value = cfg.pesos_1h || 10;
     document.getElementById('cfg_demo_qr').checked = cfg.demo_qr || false;
-    document.getElementById('cfg_max_usos').value = cfg.max_usos_demo || 100;
+    document.getElementById('cfg_max_usos').value = cfg.max_usos_demo || 110;
 
     const horas = cfg.horas || [0, 0, 0, 0];
     const pesos = cfg.pesos || [0, 0, 0, 0];
@@ -573,7 +576,7 @@ window.openConfig = function (mac) {
         document.getElementById(`cfg_p${i}`).value = pesos[i];
     }
 
-    const salas = cfg.salas || Array(20).fill(0);
+    const salas = (cfg.salas || Array(20).fill(0)).map(v => Math.max(0, Math.min(31, parseInt(v) || 0)));
     for (let i = 0; i < 20; i++) {
         const input = document.getElementById(`cfg_s${i}`);
         if (input) input.value = salas[i];
@@ -612,6 +615,12 @@ window.openConfig = function (mac) {
 
 function applyRoleBasedConfigUI(isAdmin) {
     document.querySelectorAll('.modal-tabs .tab-btn').forEach(btn => btn.style.display = '');
+
+    // Reset visibilidad de botones admin
+    ['btn-reset-inicios', 'btn-reset-billetes', 'btn-reset-historial', 'btn-reset-qr'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.style.display = isAdmin ? '' : 'none';
+    });
 
     if (!isAdmin) {
         document.querySelectorAll('.tab-btn[data-tab="tab-salas"]').forEach(b => b.style.display = 'none');
@@ -708,7 +717,8 @@ form.addEventListener('submit', async (e) => {
             pesos.push(parseInt(document.getElementById(`cfg_p${i}`).value) || 0);
         }
         for (let i = 0; i < 20; i++) {
-            salas.push(parseInt(document.getElementById(`cfg_s${i}`).value) || 0);
+            const v = parseInt(document.getElementById(`cfg_s${i}`).value) || 0;
+            salas.push(Math.max(0, Math.min(31, v)));
         }
 
         const configPath = `devices/${mac}/config`;
@@ -716,7 +726,7 @@ form.addEventListener('submit', async (e) => {
         updates[`${configPath}/precio_pulso`] = parseInt(document.getElementById('cfg_precio_pulso').value) || 100;
         updates[`${configPath}/pesos_1h`] = parseInt(document.getElementById('cfg_pesos_1h').value) || 10;
         updates[`${configPath}/demo_qr`] = document.getElementById('cfg_demo_qr').checked;
-        updates[`${configPath}/max_usos_demo`] = parseInt(document.getElementById('cfg_max_usos').value) || 100;
+        updates[`${configPath}/max_usos_demo`] = parseInt(document.getElementById('cfg_max_usos').value) || 110;
         updates[`${configPath}/horas`] = horas;
         updates[`${configPath}/pesos`] = pesos;
         updates[`${configPath}/salas`] = salas;
@@ -744,7 +754,7 @@ form.addEventListener('submit', async (e) => {
     }
 });
 
-// Reiniciar (ambos roles)
+// Reiniciar (admin + usuarios limitados)
 document.getElementById('btn-reboot').addEventListener('click', async () => {
     const mac = document.getElementById('edit-mac').value;
     if (confirm('¿Estas seguro que queres forzar el reinicio de este ESP32? Interrumpira transacciones en curso.')) {
@@ -758,8 +768,9 @@ document.getElementById('btn-reboot').addEventListener('click', async () => {
     }
 });
 
-// Boton Reset Inicios
+// Boton Reset Inicios (admin solo)
 document.getElementById('btn-reset-inicios').addEventListener('click', async () => {
+    if (getLoggedRole() !== 'admin') return;
     const mac = document.getElementById('edit-mac').value;
     if (confirm('¿Resetear el contador de inicios a 0?')) {
         try {
@@ -767,6 +778,48 @@ document.getElementById('btn-reset-inicios').addEventListener('click', async () 
             showToast('Contador de inicios reseteado.', 'success');
         } catch (error) {
             showToast('Error al resetear inicios.', 'error');
+        }
+    }
+});
+
+// Boton Reset Billetes (admin solo)
+document.getElementById('btn-reset-billetes').addEventListener('click', async () => {
+    if (getLoggedRole() !== 'admin') return;
+    const mac = document.getElementById('edit-mac').value;
+    if (confirm('¿Resetear el contador de billetes a 0?')) {
+        try {
+            await update(ref(db), { [`devices/${mac}/config/reset_billetes`]: true });
+            showToast('Contador de billetes reseteado.', 'success');
+        } catch (error) {
+            showToast('Error al resetear billetes.', 'error');
+        }
+    }
+});
+
+// Boton Reset Historial (admin solo)
+document.getElementById('btn-reset-historial').addEventListener('click', async () => {
+    if (getLoggedRole() !== 'admin') return;
+    const mac = document.getElementById('edit-mac').value;
+    if (confirm('¿Resetear el historial de transacciones?')) {
+        try {
+            await update(ref(db), { [`devices/${mac}/config/reset_historial`]: true });
+            showToast('Historial de transacciones reseteado.', 'success');
+        } catch (error) {
+            showToast('Error al resetear historial.', 'error');
+        }
+    }
+});
+
+// Boton Reset Usos QR (admin solo)
+document.getElementById('btn-reset-qr').addEventListener('click', async () => {
+    if (getLoggedRole() !== 'admin') return;
+    const mac = document.getElementById('edit-mac').value;
+    if (confirm('¿Resetear el contador de usos QR a 0?')) {
+        try {
+            await update(ref(db), { [`devices/${mac}/config/reset_usos_qr`]: true });
+            showToast('Contador de usos QR reseteado.', 'success');
+        } catch (error) {
+            showToast('Error al resetear usos QR.', 'error');
         }
     }
 });
