@@ -70,6 +70,7 @@ function setupTariffSync() {
             const horas = parseInt(hInput.value) || 0;
             const base = parseInt(basePesos.value) || 0;
             pInput.value = horas * base;
+            validarJerarquiaTarifas();
             tariffSyncLock = false;
         });
 
@@ -77,12 +78,85 @@ function setupTariffSync() {
         pInput.addEventListener('input', () => {
             if (tariffSyncLock) return;
             tariffSyncLock = true;
-            const pulsos = parseInt(pInput.value) || 0;
+            let pulsos = parseInt(pInput.value) || 0;
+            // Clamp pulsos para que sea > promo anterior
+            if (i > 0) {
+                const prevP = parseInt(document.getElementById(`cfg_p${i-1}`).value) || 0;
+                const prevH = parseInt(document.getElementById(`cfg_h${i-1}`).value) || 0;
+                if (prevH > 0 && prevP > 0 && pulsos > 0 && pulsos <= prevP) {
+                    pulsos = prevP + 1;
+                    pInput.value = pulsos;
+                }
+            }
             const base = parseInt(basePesos.value) || 1;
             hInput.value = Math.floor(pulsos / base);
+            validarJerarquiaTarifas();
             tariffSyncLock = false;
         });
+
+        // Horas cambia -> clamp a >= promo anterior
+        hInput.addEventListener('change', () => {
+            let horas = parseInt(hInput.value) || 0;
+            if (i > 0 && horas > 0) {
+                const prevH = parseInt(document.getElementById(`cfg_h${i-1}`).value) || 0;
+                if (prevH > 0 && horas <= prevH) {
+                    horas = prevH + 1;
+                    hInput.value = horas;
+                    tariffSyncLock = true;
+                    const base = parseInt(basePesos.value) || 0;
+                    document.getElementById(`cfg_p${i}`).value = horas * base;
+                    tariffSyncLock = false;
+                }
+            }
+            validarJerarquiaTarifas();
+        });
     }
+}
+
+function validarJerarquiaTarifas() {
+    let lastH = -1, lastP = -1;
+    for (let i = 0; i < 4; i++) {
+        const h = parseInt(document.getElementById(`cfg_h${i}`).value) || 0;
+        const p = parseInt(document.getElementById(`cfg_p${i}`).value) || 0;
+        const hInput = document.getElementById(`cfg_h${i}`);
+        const pInput = document.getElementById(`cfg_p${i}`);
+
+        if (h === 0 && p === 0) continue; // promo deshabilitada (saltar)
+
+        let error = false;
+        if (h > 0 && p > 0) {
+            if (h <= lastH) error = true;
+            if (p <= lastP) error = true;
+        }
+
+        if (h > 0 && p === 0) error = true;
+        if (p > 0 && h === 0) error = true;
+
+        hInput.style.borderColor = error ? 'var(--danger-color)' : '';
+        pInput.style.borderColor = error ? 'var(--danger-color)' : '';
+
+        if (h > 0 && p > 0) {
+            lastH = h;
+            lastP = p;
+        }
+    }
+}
+
+function obtenerErroresTarifas() {
+    let lastH = -1, lastP = -1;
+    const errores = [];
+    for (let i = 0; i < 4; i++) {
+        const h = parseInt(document.getElementById(`cfg_h${i}`).value) || 0;
+        const p = parseInt(document.getElementById(`cfg_p${i}`).value) || 0;
+        if (h === 0 && p === 0) continue;
+        if (h === 0 && p > 0) { errores.push(`Opcion ${i+1}: tiene Pulsos pero Horas=0`); continue; }
+        if (p === 0 && h > 0) { errores.push(`Opcion ${i+1}: tiene Horas pero Pulsos=0`); continue; }
+        if (h <= lastH) errores.push(`Opcion ${i+1}: Horas (${h}) debe ser > Horas Opcion anterior (${lastH})`);
+        if (p <= lastP) errores.push(`Opcion ${i+1}: Pulsos (${p}) debe ser > Pulsos Opcion anterior (${lastP})`);
+        lastH = h;
+        lastP = p;
+    }
+    return errores;
 }
 setupTariffSync();
 
@@ -742,6 +816,14 @@ form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const mac = document.getElementById('edit-mac').value;
     const isAdmin = getLoggedRole() === 'admin';
+
+    if (isAdmin) {
+        const errores = obtenerErroresTarifas();
+        if (errores.length > 0) {
+            showToast('Corregi las tarifas: ' + errores[0], 'error');
+            return;
+        }
+    }
 
     const updates = {};
 
