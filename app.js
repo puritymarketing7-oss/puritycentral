@@ -53,6 +53,40 @@ function initSalasInputs() {
 initSalasInputs();
 
 // =========================================================================
+// AUTO-COMPLETAR TARIFAS PROPORCIONALES
+// =========================================================================
+let tariffSyncLock = false;
+function setupTariffSync() {
+    const basePesos = document.getElementById('cfg_pesos_1h');
+    for (let i = 0; i < 4; i++) {
+        const hInput = document.getElementById(`cfg_h${i}`);
+        const pInput = document.getElementById(`cfg_p${i}`);
+        if (!hInput || !pInput) continue;
+
+        // Horas cambia -> actualizar Pulsos
+        hInput.addEventListener('input', () => {
+            if (tariffSyncLock) return;
+            tariffSyncLock = true;
+            const horas = parseInt(hInput.value) || 0;
+            const base = parseInt(basePesos.value) || 0;
+            pInput.value = horas * base;
+            tariffSyncLock = false;
+        });
+
+        // Pulsos cambia -> actualizar Horas
+        pInput.addEventListener('input', () => {
+            if (tariffSyncLock) return;
+            tariffSyncLock = true;
+            const pulsos = parseInt(pInput.value) || 0;
+            const base = parseInt(basePesos.value) || 1;
+            hInput.value = Math.floor(pulsos / base);
+            tariffSyncLock = false;
+        });
+    }
+}
+setupTariffSync();
+
+// =========================================================================
 // UTILIDADES DE HASH Y SEGURIDAD
 // =========================================================================
 async function hashPassword(password) {
@@ -726,12 +760,12 @@ form.addEventListener('submit', async (e) => {
 
         const configPath = `devices/${mac}/config`;
         updates[`${configPath}/piso`] = parseInt(document.getElementById('cfg_piso').value) || 1;
-        updates[`${configPath}/precio_pulso`] = parseInt(document.getElementById('cfg_precio_pulso').value) || 100;
-        updates[`${configPath}/pesos_1h`] = parseInt(document.getElementById('cfg_pesos_1h').value) || 10;
+        updates[`${configPath}/precio_pulso`] = Math.max(0, parseInt(document.getElementById('cfg_precio_pulso').value) || 100);
+        updates[`${configPath}/pesos_1h`] = Math.max(0, parseInt(document.getElementById('cfg_pesos_1h').value) || 10);
         updates[`${configPath}/demo_qr`] = document.getElementById('cfg_demo_qr').checked;
         updates[`${configPath}/max_usos_demo`] = parseInt(document.getElementById('cfg_max_usos').value) || 110;
-        updates[`${configPath}/horas`] = horas;
-        updates[`${configPath}/pesos`] = pesos;
+        updates[`${configPath}/horas`] = horas.map(v => Math.max(0, v));
+        updates[`${configPath}/pesos`] = pesos.map(v => Math.max(0, v));
         updates[`${configPath}/salas`] = salas;
     } else {
         const horas = [], pesos = [];
@@ -741,10 +775,10 @@ form.addEventListener('submit', async (e) => {
         }
         const configPath = `devices/${mac}/config`;
         updates[`${configPath}/piso`] = parseInt(document.getElementById('cfg_piso').value) || 1;
-        updates[`${configPath}/precio_pulso`] = parseInt(document.getElementById('cfg_precio_pulso').value) || 100;
-        updates[`${configPath}/pesos_1h`] = parseInt(document.getElementById('cfg_pesos_1h').value) || 10;
-        updates[`${configPath}/horas`] = horas;
-        updates[`${configPath}/pesos`] = pesos;
+        updates[`${configPath}/precio_pulso`] = Math.max(0, parseInt(document.getElementById('cfg_precio_pulso').value) || 100);
+        updates[`${configPath}/pesos_1h`] = Math.max(0, parseInt(document.getElementById('cfg_pesos_1h').value) || 10);
+        updates[`${configPath}/horas`] = horas.map(v => Math.max(0, v));
+        updates[`${configPath}/pesos`] = pesos.map(v => Math.max(0, v));
     }
 
     try {
