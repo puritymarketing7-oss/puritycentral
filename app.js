@@ -912,10 +912,8 @@ function applyRoleBasedConfigUI(isAdmin) {
     document.querySelectorAll('.modal-tabs .tab-btn').forEach(btn => btn.style.display = '');
 
     // Reset visibilidad de botones admin
-    ['btn-reset-inicios', 'btn-reset-billetes', 'btn-reset-historial', 'btn-reset-qr'].forEach(id => {
-        const btn = document.getElementById(id);
-        if (btn) btn.style.display = isAdmin ? '' : 'none';
-    });
+    const btnResetInicios = document.getElementById('btn-reset-inicios');
+    if (btnResetInicios) btnResetInicios.style.display = isAdmin ? '' : 'none';
 
     if (!isAdmin) {
         // En vez de ocultar pestañas, deshabilitamos campos.
@@ -950,6 +948,13 @@ function applyRoleBasedConfigUI(isAdmin) {
             input.style.border = 'none';
             input.style.background = 'transparent';
         });
+
+        // Bloquear Estadisticas QR
+        const qrRecaudacion = document.getElementById('qr_recaudacion');
+        if (qrRecaudacion) { qrRecaudacion.style.border = 'none'; qrRecaudacion.style.background = 'transparent'; }
+
+        const qrUsos = document.getElementById('qr_usos');
+        if (qrUsos) { qrUsos.style.border = 'none'; qrUsos.style.background = 'transparent'; }
     } else {
         // Revertir para admin
         const groupMaxUsos = document.getElementById('group_max_usos');
@@ -970,17 +975,6 @@ function applyRoleBasedConfigUI(isAdmin) {
         document.querySelectorAll('#tab-tarifas input').forEach(input => { input.readOnly = false; input.style.border = ''; input.style.background = ''; });
         document.querySelectorAll('#tab-salas input').forEach(input => { input.readOnly = false; input.style.border = ''; input.style.background = ''; });
     }
-
-    const tariffsInputs = document.querySelectorAll('#tab-tarifas input');
-    tariffsInputs.forEach(input => {
-        if (!isAdmin) {
-            input.readOnly = false;
-            input.style.opacity = '1';
-        } else {
-            input.readOnly = false;
-            input.style.opacity = '1';
-        }
-    });
 
     const saveBtn = document.querySelector('.form-actions .btn-primary');
     if (saveBtn) {
