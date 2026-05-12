@@ -540,7 +540,6 @@ document.getElementById('btn-admin-save-creds').addEventListener('click', async 
     }
 });
 
-}
 
 document.getElementById('btn-add-user').addEventListener('click', async () => {
     const newUsername = document.getElementById('new-user-name').value.trim().toLowerCase();
