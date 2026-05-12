@@ -673,6 +673,9 @@ window.openConfig = function (mac) {
     document.getElementById('cfg_pesos_1h').value = cfg.pesos_1h || 10;
     document.getElementById('cfg_demo_qr').checked = cfg.demo_qr || false;
     document.getElementById('cfg_max_usos').value = cfg.max_usos_demo || 110;
+    
+    const cfgAlerta = document.getElementById('cfg_alerta_70');
+    if (cfgAlerta) cfgAlerta.checked = cfg.alerta_70_billetes || false;
 
     // Stats QR (solo lectura en pestaña Promo QR)
     const qrRec = document.getElementById('qr_recaudacion');
@@ -877,6 +880,10 @@ form.addEventListener('submit', async (e) => {
         updates[`${configPath}/pesos_1h`] = Math.max(0, parseInt(document.getElementById('cfg_pesos_1h').value) || 10);
         updates[`${configPath}/demo_qr`] = document.getElementById('cfg_demo_qr').checked;
         updates[`${configPath}/max_usos_demo`] = parseInt(document.getElementById('cfg_max_usos').value) || 110;
+        
+        const cfgAlerta = document.getElementById('cfg_alerta_70');
+        if (cfgAlerta) updates[`${configPath}/alerta_70_billetes`] = cfgAlerta.checked;
+
         updates[`${configPath}/horas`] = horas.map(v => Math.max(0, v));
         updates[`${configPath}/pesos`] = pesos.map(v => Math.max(0, v));
         updates[`${configPath}/salas`] = salas;
@@ -978,47 +985,49 @@ document.getElementById('btn-reset-qr').addEventListener('click', async () => {
 });
 
 // Botones de Email
-document.getElementById('btn-config-email').addEventListener('click', async () => {
+document.getElementById('btn-config-email-historial').addEventListener('click', async () => {
     const mac = document.getElementById('edit-mac').value;
     const device = globalDevicesData[mac];
     if (!device) return;
-    const currentEmail = (device.config && device.config.email_aviso) || '';
-    const newEmail = prompt('Ingresa el correo electronico para los avisos:', currentEmail);
+    const currentEmail = (device.config && device.config.email_billetero) || '';
+    const newEmail = prompt('Ingresa el correo electronico para reportes del Billetero:', currentEmail);
     if (newEmail !== null) {
         try {
-            await update(ref(db), { [`devices/${mac}/config/email_aviso`]: newEmail });
-            showToast('Email configurado exitosamente.', 'success');
+            await update(ref(db), { [`devices/${mac}/config/email_billetero`]: newEmail });
+            showToast('Email de Billetero configurado.', 'success');
         } catch (error) {
             showToast('Error al guardar el email.', 'error');
         }
     }
 });
 
-document.getElementById('btn-send-alert').addEventListener('click', () => {
+document.getElementById('btn-config-email-qr').addEventListener('click', async () => {
     const mac = document.getElementById('edit-mac').value;
     const device = globalDevicesData[mac];
     if (!device) return;
-    const email = (device.config && device.config.email_aviso) || '';
-    if (!email) {
-        showToast('Primero debes configurar un email.', 'error');
-        return;
+    const currentEmail = (device.config && device.config.email_qr) || '';
+    const newEmail = prompt('Ingresa el correo electronico para reportes de Promo QR:', currentEmail);
+    if (newEmail !== null) {
+        try {
+            await update(ref(db), { [`devices/${mac}/config/email_qr`]: newEmail });
+            showToast('Email de QR configurado.', 'success');
+        } catch (error) {
+            showToast('Error al guardar el email.', 'error');
+        }
     }
-    const subject = encodeURIComponent('Aviso: Limite de 70 billetes alcanzado');
-    const body = encodeURIComponent(`Hola,\n\nEl dispositivo ${device.info.name || mac} ha alcanzado o superado el limite de 70 billetes ingresados.\n\nPor favor, revisar.\n`);
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 });
 
 document.getElementById('btn-send-table').addEventListener('click', () => {
     const mac = document.getElementById('edit-mac').value;
     const device = globalDevicesData[mac];
     if (!device) return;
-    const email = (device.config && device.config.email_aviso) || '';
+    const email = (device.config && device.config.email_billetero) || '';
     if (!email) {
-        showToast('Primero debes configurar un email.', 'error');
+        showToast('Primero debes configurar el email de Billetero.', 'error');
         return;
     }
     const historial = (device.stats && device.stats.historial) || [];
-    let tableText = 'Historial de Transacciones:\n\n';
+    let tableText = 'Historial de Transacciones (Billetero):\n\n';
     tableText += 'N | Fecha | Sala | Horas | $500 | $1k | $2k | $10k | Total\n';
     tableText += '-----------------------------------------------------------\n';
     historial.forEach((t, i) => {
@@ -1027,6 +1036,33 @@ document.getElementById('btn-send-table').addEventListener('click', () => {
     });
     
     const subject = encodeURIComponent('Reporte de Historial - Billetero');
+    const body = encodeURIComponent(tableText);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+});
+
+document.getElementById('btn-send-table-qr').addEventListener('click', () => {
+    const mac = document.getElementById('edit-mac').value;
+    const device = globalDevicesData[mac];
+    if (!device) return;
+    const email = (device.config && device.config.email_qr) || '';
+    if (!email) {
+        showToast('Primero debes configurar el email de QR.', 'error');
+        return;
+    }
+    const historial_qr = (device.stats && device.stats.historial_qr) || [];
+    let tableText = 'Historial de Transacciones (Promo QR):\n\n';
+    tableText += 'N | Fecha | Sala | Horas | Total\n';
+    tableText += '----------------------------------------\n';
+    historial_qr.forEach((t, i) => {
+        const fecha = t.fecha || '---';
+        const sala = t.sala || 0;
+        const horas = t.horas || t.hora || 0;
+        const total = t.total || 0;
+        if (sala === 0 && horas === 0 && total === 0) return;
+        tableText += `${i+1} | ${fecha} | ${sala} | ${horas}h | $${total}\n`;
+    });
+    
+    const subject = encodeURIComponent('Reporte de Historial - Promo QR');
     const body = encodeURIComponent(tableText);
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 });
