@@ -703,19 +703,50 @@ window.openConfig = function (mac) {
     const tbody = document.getElementById('hist_table_body');
     if (tbody) {
         if (historial.length === 0 || historial.every(t => (t.sala || 0) === 0 && (t.hora || 0) === 0)) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-secondary);">Sin datos aun</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color: var(--text-secondary);">Sin datos aun</td></tr>';
         } else {
             tbody.innerHTML = '';
             historial.forEach((t, idx) => {
                 const sala = t.sala || 0;
                 const hora = t.hora || 0;
                 if (sala === 0 && hora === 0) return;
+                
+                const fecha = t.fecha || '---';
+                const b500 = t.b500 || 0;
+                const b1000 = t.b1000 || 0;
+                const b2000 = t.b2000 || 0;
+                const b10000 = t.b10000 || 0;
+                const total = t.total || 0;
+                
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${idx + 1}</td><td>${sala}</td><td>${hora}h</td>`;
+                tr.innerHTML = `<td>${idx + 1}</td><td>${fecha}</td><td>${sala}</td><td>${hora}h</td><td>${b500}</td><td>${b1000}</td><td>${b2000}</td><td>${b10000}</td><td>$${total}</td>`;
                 tbody.appendChild(tr);
             });
             if (tbody.children.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-secondary);">Sin datos aun</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color: var(--text-secondary);">Sin datos aun</td></tr>';
+            }
+        }
+    }
+
+    const historial_qr = stats.historial_qr || [];
+    const qrTbody = document.getElementById('qr_table_body');
+    if (qrTbody) {
+        if (historial_qr.length === 0 || historial_qr.every(t => (t.sala || 0) === 0 && (t.horas || t.hora || 0) === 0 && (t.total || 0) === 0)) {
+            qrTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-secondary);">Sin datos aun</td></tr>';
+        } else {
+            qrTbody.innerHTML = '';
+            historial_qr.forEach((t, idx) => {
+                const fecha = t.fecha || '---';
+                const sala = t.sala || 0;
+                const horas = t.horas || t.hora || 0;
+                const total = t.total || 0;
+                if (sala === 0 && horas === 0 && total === 0) return;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${idx + 1}</td><td>${fecha}</td><td>${sala}</td><td>${horas}h</td><td>$${total}</td>`;
+                qrTbody.appendChild(tr);
+            });
+            if (qrTbody.children.length === 0) {
+                qrTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-secondary);">Sin datos aun</td></tr>';
             }
         }
     }
@@ -933,14 +964,71 @@ document.getElementById('btn-reset-historial').addEventListener('click', async (
 document.getElementById('btn-reset-qr').addEventListener('click', async () => {
     if (getLoggedRole() !== 'admin') return;
     const mac = document.getElementById('edit-mac').value;
-    if (confirm('¿Resetear el contador de usos QR a 0?')) {
+    if (confirm('¿Resetear el contador de usos QR y el historial a 0?')) {
         try {
-            await update(ref(db), { [`devices/${mac}/config/reset_usos_qr`]: true });
-            showToast('Contador de usos QR reseteado.', 'success');
+            await update(ref(db), { 
+                [`devices/${mac}/config/reset_usos_qr`]: true,
+                [`devices/${mac}/config/reset_historial_qr`]: true 
+            });
+            showToast('Contador e historial QR reseteados.', 'success');
         } catch (error) {
             showToast('Error al resetear usos QR.', 'error');
         }
     }
+});
+
+// Botones de Email
+document.getElementById('btn-config-email').addEventListener('click', async () => {
+    const mac = document.getElementById('edit-mac').value;
+    const device = globalDevicesData[mac];
+    if (!device) return;
+    const currentEmail = (device.config && device.config.email_aviso) || '';
+    const newEmail = prompt('Ingresa el correo electronico para los avisos:', currentEmail);
+    if (newEmail !== null) {
+        try {
+            await update(ref(db), { [`devices/${mac}/config/email_aviso`]: newEmail });
+            showToast('Email configurado exitosamente.', 'success');
+        } catch (error) {
+            showToast('Error al guardar el email.', 'error');
+        }
+    }
+});
+
+document.getElementById('btn-send-alert').addEventListener('click', () => {
+    const mac = document.getElementById('edit-mac').value;
+    const device = globalDevicesData[mac];
+    if (!device) return;
+    const email = (device.config && device.config.email_aviso) || '';
+    if (!email) {
+        showToast('Primero debes configurar un email.', 'error');
+        return;
+    }
+    const subject = encodeURIComponent('Aviso: Limite de 70 billetes alcanzado');
+    const body = encodeURIComponent(`Hola,\n\nEl dispositivo ${device.info.name || mac} ha alcanzado o superado el limite de 70 billetes ingresados.\n\nPor favor, revisar.\n`);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+});
+
+document.getElementById('btn-send-table').addEventListener('click', () => {
+    const mac = document.getElementById('edit-mac').value;
+    const device = globalDevicesData[mac];
+    if (!device) return;
+    const email = (device.config && device.config.email_aviso) || '';
+    if (!email) {
+        showToast('Primero debes configurar un email.', 'error');
+        return;
+    }
+    const historial = (device.stats && device.stats.historial) || [];
+    let tableText = 'Historial de Transacciones:\n\n';
+    tableText += 'N | Fecha | Sala | Horas | $500 | $1k | $2k | $10k | Total\n';
+    tableText += '-----------------------------------------------------------\n';
+    historial.forEach((t, i) => {
+        if ((t.sala || 0) === 0 && (t.hora || 0) === 0) return;
+        tableText += `${i+1} | ${t.fecha || '---'} | ${t.sala || 0} | ${t.hora || 0}h | ${t.b500 || 0} | ${t.b1000 || 0} | ${t.b2000 || 0} | ${t.b10000 || 0} | $${t.total || 0}\n`;
+    });
+    
+    const subject = encodeURIComponent('Reporte de Historial - Billetero');
+    const body = encodeURIComponent(tableText);
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
 });
 
 // =========================================================================
