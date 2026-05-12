@@ -442,8 +442,9 @@ function renderUsersList() {
             <td><strong>${username}</strong></td>
             <td>${allowedList.length > 0 ? allowedList.map(m => `<span class="device-tag">${m.slice(-6)}</span>`).join(' ') : '<span style="color:var(--text-secondary)">Sin equipos</span>'}</td>
             <td>
-                <button class="btn btn-sm btn-primary edit-user-devices" data-user="${username}"><i class="fa-solid fa-gear"></i> Equipos</button>
-                <button class="btn btn-sm btn-danger delete-user" data-user="${username}"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn btn-sm btn-primary edit-user-devices" data-user="${username}" style="margin:2px;"><i class="fa-solid fa-gear"></i> Equipos</button>
+                <button class="btn btn-sm btn-secondary edit-user-creds" data-user="${username}" style="margin:2px;"><i class="fa-solid fa-key"></i> Claves</button>
+                <button class="btn btn-sm btn-danger delete-user" data-user="${username}" style="margin:2px;"><i class="fa-solid fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -470,6 +471,75 @@ function renderUsersList() {
     document.querySelectorAll('.edit-user-devices').forEach(btn => {
         btn.addEventListener('click', () => openDeviceAssignmentModal(btn.dataset.user));
     });
+
+    document.querySelectorAll('.edit-user-creds').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const u = btn.dataset.user;
+            document.getElementById('admin-edit-target-user').textContent = u;
+            document.getElementById('admin-edit-new-username').value = '';
+            document.getElementById('admin-edit-new-pass').value = '';
+            document.getElementById('admin-edit-creds-modal').classList.add('show');
+        });
+    });
+}
+
+document.getElementById('close-admin-edit-creds-modal').onclick = () => document.getElementById('admin-edit-creds-modal').classList.remove('show');
+
+document.getElementById('btn-admin-save-creds').addEventListener('click', async () => {
+    const targetUser = document.getElementById('admin-edit-target-user').textContent;
+    const newUsername = document.getElementById('admin-edit-new-username').value.trim().toLowerCase();
+    const newPass = document.getElementById('admin-edit-new-pass').value;
+
+    const userData = allUsersData[targetUser];
+    if (!userData) return;
+
+    let usernameChanged = false;
+    let newUserKey = targetUser;
+
+    if (newUsername && newUsername !== targetUser) {
+        if (newUsername.length < 3) {
+            showToast('El nuevo usuario debe tener al menos 3 caracteres', 'error');
+            return;
+        }
+        if (allUsersData[newUsername]) {
+            showToast('Ese nombre de usuario ya existe', 'error');
+            return;
+        }
+        usernameChanged = true;
+        newUserKey = newUsername;
+    }
+
+    if (newPass && newPass.length < 4) {
+        showToast('La nueva clave debe tener minimo 4 caracteres', 'error');
+        return;
+    }
+
+    const finalHash = newPass ? await hashPassword(newPass) : userData.password_hash;
+    const updates = {};
+
+    try {
+        if (usernameChanged) {
+            updates[`users/${newUserKey}`] = {
+                password_hash: finalHash,
+                role: userData.role,
+                created_at: userData.created_at || Date.now()
+            };
+            if (userData.allowed_devices) {
+                updates[`users/${newUserKey}/allowed_devices`] = userData.allowed_devices;
+            }
+            updates[`users/${targetUser}`] = null;
+        } else {
+            updates[`users/${targetUser}/password_hash`] = finalHash;
+        }
+
+        await update(ref(db), updates);
+        showToast('Credenciales actualizadas correctamente', 'success');
+        document.getElementById('admin-edit-creds-modal').classList.remove('show');
+    } catch(e) {
+        showToast('Error al actualizar', 'error');
+    }
+});
+
 }
 
 document.getElementById('btn-add-user').addEventListener('click', async () => {
@@ -981,9 +1051,8 @@ document.getElementById('btn-reset-inicios').addEventListener('click', async () 
     }
 });
 
-// Boton Reset Billetes (admin solo)
+// Boton Reset Billetes (Todos)
 document.getElementById('btn-reset-billetes').addEventListener('click', async () => {
-    if (getLoggedRole() !== 'admin') return;
     const mac = document.getElementById('edit-mac').value;
     if (confirm('¿Resetear el contador de billetes a 0?')) {
         try {
@@ -995,9 +1064,8 @@ document.getElementById('btn-reset-billetes').addEventListener('click', async ()
     }
 });
 
-// Boton Reset Historial (admin solo)
+// Boton Reset Historial (Todos)
 document.getElementById('btn-reset-historial').addEventListener('click', async () => {
-    if (getLoggedRole() !== 'admin') return;
     const mac = document.getElementById('edit-mac').value;
     if (confirm('¿Resetear el historial de transacciones?')) {
         try {
@@ -1009,9 +1077,8 @@ document.getElementById('btn-reset-historial').addEventListener('click', async (
     }
 });
 
-// Boton Reset Usos QR (admin solo)
+// Boton Reset Usos QR (Todos)
 document.getElementById('btn-reset-qr').addEventListener('click', async () => {
-    if (getLoggedRole() !== 'admin') return;
     const mac = document.getElementById('edit-mac').value;
     if (confirm('¿Resetear el contador de usos QR y el historial a 0?')) {
         try {

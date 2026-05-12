@@ -99,7 +99,7 @@
                     <thead>
                         <tr>
                             <th>Usuario</th>
-                            <th>Equipos Asignados</th>
+                            <th>Equipos Permitidos</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -108,6 +108,18 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Admin Editar Clave de Usuario -->
+    <div id="admin-edit-creds-modal" class="modal">
+        <div class="modal-content glass-panel" style="max-width: 420px; text-align: center;">
+            <span class="close-btn" id="close-admin-edit-creds-modal">&times;</span>
+            <h2>Editar Usuario: <span id="admin-edit-target-user" style="color:var(--accent-color);"></span></h2>
+            <input type="text" id="admin-edit-new-username" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Nuevo Nombre (opcional)">
+            <input type="password" id="admin-edit-new-pass" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Nueva Clave (opcional)">
+            <p style="color:var(--text-secondary);font-size:0.8rem;margin:0;">Deja en blanco lo que no quieras cambiar. Los datos del usuario (emails, etc) no se perderan al cambiar su nombre.</p>
+            <button id="btn-admin-save-creds" class="btn btn-primary" style="margin-top:15px;"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
         </div>
     </div>
 
