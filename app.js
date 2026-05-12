@@ -677,6 +677,12 @@ window.openConfig = function (mac) {
     const cfgAlerta = document.getElementById('cfg_alerta_70');
     if (cfgAlerta) cfgAlerta.checked = cfg.alerta_70_billetes || false;
 
+    const cfgAutoQR = document.getElementById('cfg_auto_100_qr');
+    if (cfgAutoQR) cfgAutoQR.checked = cfg.auto_100_qr || false;
+
+    const cfgAutoBilletero = document.getElementById('cfg_auto_100_billetero');
+    if (cfgAutoBilletero) cfgAutoBilletero.checked = cfg.auto_100_billetero || false;
+
     // Stats QR (solo lectura en pestaña Promo QR)
     const qrRec = document.getElementById('qr_recaudacion');
     if (qrRec) qrRec.value = '$' + ((stats.monto_total_qr || 0).toLocaleString());
@@ -788,34 +794,54 @@ function applyRoleBasedConfigUI(isAdmin) {
     });
 
     if (!isAdmin) {
-        document.querySelectorAll('.tab-btn[data-tab="tab-salas"]').forEach(b => b.style.display = 'none');
-        document.querySelectorAll('.tab-btn[data-tab="tab-qr"]').forEach(b => b.style.display = 'none');
+        // En vez de ocultar pestañas, deshabilitamos campos.
+        // Ocultar elementos especificos de QR
+        const groupMaxUsos = document.getElementById('group_max_usos');
+        if (groupMaxUsos) groupMaxUsos.style.display = 'none';
+        
+        const demoQrToggle = document.getElementById('cfg_demo_qr');
+        if (demoQrToggle) {
+            demoQrToggle.disabled = true;
+            demoQrToggle.closest('.toggle-group').style.display = 'none';
+        }
 
-        document.querySelectorAll('.modal-tabs .tab-btn').forEach(b => {
-            if (!b.classList.contains('active') && b.style.display === 'none') {
-                b.classList.remove('active');
-            }
+        // Bloquear Piso
+        const pisoInput = document.getElementById('cfg_piso');
+        if (pisoInput) pisoInput.readOnly = true;
+
+        // Bloquear Nombre
+        const nameInput = document.getElementById('cfg_name');
+        if (nameInput) nameInput.readOnly = true;
+
+        // Bloquear Tarifas
+        document.querySelectorAll('#tab-tarifas input').forEach(input => {
+            input.readOnly = true;
         });
 
-        const activeTab = document.querySelector('.tab-btn.active');
-        if (!activeTab || activeTab.style.display === 'none') {
-            const firstVisible = document.querySelector('.tab-btn:not([style*="display: none"])');
-            if (firstVisible) {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                firstVisible.classList.add('active');
-                document.getElementById(firstVisible.dataset.tab).classList.add('active');
-            }
+        // Bloquear Salas
+        document.querySelectorAll('#tab-salas input').forEach(input => {
+            input.readOnly = true;
+        });
+    } else {
+        // Revertir para admin
+        const groupMaxUsos = document.getElementById('group_max_usos');
+        if (groupMaxUsos) groupMaxUsos.style.display = '';
+        
+        const demoQrToggle = document.getElementById('cfg_demo_qr');
+        if (demoQrToggle) {
+            demoQrToggle.disabled = false;
+            demoQrToggle.closest('.toggle-group').style.display = '';
         }
-    }
 
-    const formGroups = document.querySelectorAll('#tab-general .form-group');
-    formGroups.forEach(group => {
-        if (!isAdmin && group.querySelector('#cfg_name')) {
-            const input = group.querySelector('input');
-            if (input) input.readOnly = true;
-        }
-    });
+        const pisoInput = document.getElementById('cfg_piso');
+        if (pisoInput) pisoInput.readOnly = false;
+
+        const nameInput = document.getElementById('cfg_name');
+        if (nameInput) nameInput.readOnly = false;
+
+        document.querySelectorAll('#tab-tarifas input').forEach(input => input.readOnly = false);
+        document.querySelectorAll('#tab-salas input').forEach(input => input.readOnly = false);
+    }
 
     const tariffsInputs = document.querySelectorAll('#tab-tarifas input');
     tariffsInputs.forEach(input => {
@@ -881,6 +907,18 @@ form.addEventListener('submit', async (e) => {
 
     const updates = {};
 
+    const configPath = `devices/${mac}/config`;
+    
+    // Todos pueden guardar Billetero y ciertas partes de QR
+    const cfgAlerta = document.getElementById('cfg_alerta_70');
+    if (cfgAlerta) updates[`${configPath}/alerta_70_billetes`] = cfgAlerta.checked;
+
+    const cfgAutoQR = document.getElementById('cfg_auto_100_qr');
+    if (cfgAutoQR) updates[`${configPath}/auto_100_qr`] = cfgAutoQR.checked;
+
+    const cfgAutoBilletero = document.getElementById('cfg_auto_100_billetero');
+    if (cfgAutoBilletero) updates[`${configPath}/auto_100_billetero`] = cfgAutoBilletero.checked;
+
     if (isAdmin) {
         updates[`devices/${mac}/info/name`] = document.getElementById('cfg_name').value;
 
@@ -894,31 +932,15 @@ form.addEventListener('submit', async (e) => {
             salas.push(Math.max(0, Math.min(31, v)));
         }
 
-        const configPath = `devices/${mac}/config`;
         updates[`${configPath}/piso`] = parseInt(document.getElementById('cfg_piso').value) || 1;
         updates[`${configPath}/precio_pulso`] = Math.max(0, parseInt(document.getElementById('cfg_precio_pulso').value) || 100);
         updates[`${configPath}/pesos_1h`] = Math.max(0, parseInt(document.getElementById('cfg_pesos_1h').value) || 10);
         updates[`${configPath}/demo_qr`] = document.getElementById('cfg_demo_qr').checked;
         updates[`${configPath}/max_usos_demo`] = parseInt(document.getElementById('cfg_max_usos').value) || 110;
         
-        const cfgAlerta = document.getElementById('cfg_alerta_70');
-        if (cfgAlerta) updates[`${configPath}/alerta_70_billetes`] = cfgAlerta.checked;
-
         updates[`${configPath}/horas`] = horas.map(v => Math.max(0, v));
         updates[`${configPath}/pesos`] = pesos.map(v => Math.max(0, v));
         updates[`${configPath}/salas`] = salas;
-    } else {
-        const horas = [], pesos = [];
-        for (let i = 0; i < 4; i++) {
-            horas.push(parseInt(document.getElementById(`cfg_h${i}`).value) || 0);
-            pesos.push(parseInt(document.getElementById(`cfg_p${i}`).value) || 0);
-        }
-        const configPath = `devices/${mac}/config`;
-        updates[`${configPath}/piso`] = parseInt(document.getElementById('cfg_piso').value) || 1;
-        updates[`${configPath}/precio_pulso`] = Math.max(0, parseInt(document.getElementById('cfg_precio_pulso').value) || 100);
-        updates[`${configPath}/pesos_1h`] = Math.max(0, parseInt(document.getElementById('cfg_pesos_1h').value) || 10);
-        updates[`${configPath}/horas`] = horas.map(v => Math.max(0, v));
-        updates[`${configPath}/pesos`] = pesos.map(v => Math.max(0, v));
     }
 
     try {
@@ -1010,7 +1032,7 @@ document.getElementById('btn-config-email-alerta').addEventListener('click', asy
     const device = globalDevicesData[mac];
     if (!device) return;
     const currentEmail = (device.config && device.config.email_aviso) || '';
-    const newEmail = prompt('Ingresa el correo electronico para la Alerta de 70 Billetes:', currentEmail);
+    const newEmail = prompt('Ingresa el correo electronico para la Alerta de 70 Billetes (puedes usar multiples correos separandolos por comas):', currentEmail);
     if (newEmail !== null) {
         try {
             await update(ref(db), { [`devices/${mac}/config/email_aviso`]: newEmail });
@@ -1026,7 +1048,7 @@ document.getElementById('btn-config-email-historial').addEventListener('click', 
     const device = globalDevicesData[mac];
     if (!device) return;
     const currentEmail = (device.config && device.config.email_billetero) || '';
-    const newEmail = prompt('Ingresa el correo electronico para reportes del Billetero:', currentEmail);
+    const newEmail = prompt('Ingresa el correo electronico para reportes del Billetero (puedes usar multiples correos separandolos por comas):', currentEmail);
     if (newEmail !== null) {
         try {
             await update(ref(db), { [`devices/${mac}/config/email_billetero`]: newEmail });
@@ -1042,7 +1064,7 @@ document.getElementById('btn-config-email-qr').addEventListener('click', async (
     const device = globalDevicesData[mac];
     if (!device) return;
     const currentEmail = (device.config && device.config.email_qr) || '';
-    const newEmail = prompt('Ingresa el correo electronico para reportes de Promo QR:', currentEmail);
+    const newEmail = prompt('Ingresa el correo electronico para reportes de Promo QR (puedes usar multiples correos separandolos por comas):', currentEmail);
     if (newEmail !== null) {
         try {
             await update(ref(db), { [`devices/${mac}/config/email_qr`]: newEmail });
