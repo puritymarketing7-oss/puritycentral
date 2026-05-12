@@ -702,7 +702,17 @@ window.openConfig = function (mac) {
         if (el) el.textContent = (billetes[i] || 0).toLocaleString();
     }
 
-    const historial = stats.historial || [];
+    let historial = [];
+    if (stats.historial) {
+        if (Array.isArray(stats.historial)) {
+            historial = stats.historial;
+        } else {
+            const entries = Object.entries(stats.historial);
+            entries.sort((a, b) => a[0].localeCompare(b[0]));
+            historial = entries.map(e => e[1]);
+        }
+    }
+    historial = historial.slice(-100).reverse();
     const tbody = document.getElementById('hist_table_body');
     if (tbody) {
         if (historial.length === 0 || historial.every(t => (t.sala || 0) === 0 && (t.hora || 0) === 0)) {
@@ -731,7 +741,17 @@ window.openConfig = function (mac) {
         }
     }
 
-    const historial_qr = stats.historial_qr || [];
+    let historial_qr = [];
+    if (stats.historial_qr) {
+        if (Array.isArray(stats.historial_qr)) {
+            historial_qr = stats.historial_qr;
+        } else {
+            const entries = Object.entries(stats.historial_qr);
+            entries.sort((a, b) => a[0].localeCompare(b[0]));
+            historial_qr = entries.map(e => e[1]);
+        }
+    }
+    historial_qr = historial_qr.slice(-100).reverse();
     const qrTbody = document.getElementById('qr_table_body');
     if (qrTbody) {
         if (historial_qr.length === 0 || historial_qr.every(t => (t.sala || 0) === 0 && (t.horas || t.hora || 0) === 0 && (t.total || 0) === 0)) {
@@ -985,6 +1005,22 @@ document.getElementById('btn-reset-qr').addEventListener('click', async () => {
 });
 
 // Botones de Email
+document.getElementById('btn-config-email-alerta').addEventListener('click', async () => {
+    const mac = document.getElementById('edit-mac').value;
+    const device = globalDevicesData[mac];
+    if (!device) return;
+    const currentEmail = (device.config && device.config.email_aviso) || '';
+    const newEmail = prompt('Ingresa el correo electronico para la Alerta de 70 Billetes:', currentEmail);
+    if (newEmail !== null) {
+        try {
+            await update(ref(db), { [`devices/${mac}/config/email_aviso`]: newEmail });
+            showToast('Email de Alerta configurado.', 'success');
+        } catch (error) {
+            showToast('Error al guardar el email.', 'error');
+        }
+    }
+});
+
 document.getElementById('btn-config-email-historial').addEventListener('click', async () => {
     const mac = document.getElementById('edit-mac').value;
     const device = globalDevicesData[mac];
@@ -1017,7 +1053,7 @@ document.getElementById('btn-config-email-qr').addEventListener('click', async (
     }
 });
 
-document.getElementById('btn-send-table').addEventListener('click', () => {
+document.getElementById('btn-send-table').addEventListener('click', async () => {
     const mac = document.getElementById('edit-mac').value;
     const device = globalDevicesData[mac];
     if (!device) return;
@@ -1026,7 +1062,16 @@ document.getElementById('btn-send-table').addEventListener('click', () => {
         showToast('Primero debes configurar el email de Billetero.', 'error');
         return;
     }
-    const historial = (device.stats && device.stats.historial) || [];
+    let historial = [];
+    if (device.stats && device.stats.historial) {
+        if (Array.isArray(device.stats.historial)) historial = device.stats.historial;
+        else {
+            const entries = Object.entries(device.stats.historial);
+            entries.sort((a, b) => a[0].localeCompare(b[0]));
+            historial = entries.map(e => e[1]);
+        }
+    }
+    historial = historial.slice(-100).reverse();
     let tableText = 'Historial de Transacciones (Billetero):\n\n';
     tableText += 'N | Fecha | Sala | Horas | $500 | $1k | $2k | $10k | Total\n';
     tableText += '-----------------------------------------------------------\n';
@@ -1034,13 +1079,33 @@ document.getElementById('btn-send-table').addEventListener('click', () => {
         if ((t.sala || 0) === 0 && (t.hora || 0) === 0) return;
         tableText += `${i+1} | ${t.fecha || '---'} | ${t.sala || 0} | ${t.hora || 0}h | ${t.b500 || 0} | ${t.b1000 || 0} | ${t.b2000 || 0} | ${t.b10000 || 0} | $${t.total || 0}\n`;
     });
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwC60E2OLbqbO7qpXej22xwkTnn15GQzrUObd76D8bGmPG8n0qwhbLE41zbF8TYrHEf/exec";
+    const btn = document.getElementById('btn-send-table');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
     
-    const subject = encodeURIComponent('Reporte de Historial - Billetero');
-    const body = encodeURIComponent(tableText);
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                email: email,
+                asunto: 'Reporte de Historial - Billetero',
+                mensaje: tableText
+            })
+        });
+        const result = await response.text();
+        if (result.includes('Exito')) showToast('Tabla enviada exitosamente por email.', 'success');
+        else showToast('Error al enviar la tabla: ' + result, 'error');
+    } catch (error) {
+        showToast('Error de conexion al enviar email.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-envelope-open-text"></i> Enviar Tabla por Email';
+    }
 });
 
-document.getElementById('btn-send-table-qr').addEventListener('click', () => {
+document.getElementById('btn-send-table-qr').addEventListener('click', async () => {
     const mac = document.getElementById('edit-mac').value;
     const device = globalDevicesData[mac];
     if (!device) return;
@@ -1049,7 +1114,16 @@ document.getElementById('btn-send-table-qr').addEventListener('click', () => {
         showToast('Primero debes configurar el email de QR.', 'error');
         return;
     }
-    const historial_qr = (device.stats && device.stats.historial_qr) || [];
+    let historial_qr = [];
+    if (device.stats && device.stats.historial_qr) {
+        if (Array.isArray(device.stats.historial_qr)) historial_qr = device.stats.historial_qr;
+        else {
+            const entries = Object.entries(device.stats.historial_qr);
+            entries.sort((a, b) => a[0].localeCompare(b[0]));
+            historial_qr = entries.map(e => e[1]);
+        }
+    }
+    historial_qr = historial_qr.slice(-100).reverse();
     let tableText = 'Historial de Transacciones (Promo QR):\n\n';
     tableText += 'N | Fecha | Sala | Horas | Total\n';
     tableText += '----------------------------------------\n';
@@ -1062,9 +1136,30 @@ document.getElementById('btn-send-table-qr').addEventListener('click', () => {
         tableText += `${i+1} | ${fecha} | ${sala} | ${horas}h | $${total}\n`;
     });
     
-    const subject = encodeURIComponent('Reporte de Historial - Promo QR');
-    const body = encodeURIComponent(tableText);
-    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwC60E2OLbqbO7qpXej22xwkTnn15GQzrUObd76D8bGmPG8n0qwhbLE41zbF8TYrHEf/exec";
+    const btn = document.getElementById('btn-send-table-qr');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
+    
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                email: email,
+                asunto: 'Reporte de Historial - Promo QR',
+                mensaje: tableText
+            })
+        });
+        const result = await response.text();
+        if (result.includes('Exito')) showToast('Tabla enviada exitosamente por email.', 'success');
+        else showToast('Error al enviar la tabla: ' + result, 'error');
+    } catch (error) {
+        showToast('Error de conexion al enviar email.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-envelope-open-text"></i> Enviar Tabla por Email';
+    }
 });
 
 // =========================================================================
