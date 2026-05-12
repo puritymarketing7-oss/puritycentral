@@ -401,6 +401,16 @@ document.getElementById('btn-save-creds').addEventListener('click', async () => 
         document.getElementById('new-username').value = '';
         document.getElementById('new-pass').value = '';
         document.getElementById('new-pass-repeat').value = '';
+        
+        const tPass = document.getElementById('new-pass');
+        const tPassRep = document.getElementById('new-pass-repeat');
+        const eyeIcon = document.getElementById('toggle-normal-pass');
+        if (eyeIcon && tPass) {
+            tPass.type = 'password';
+            tPassRep.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
         checkLogin();
     } catch(e) {
         showToast('Error al actualizar', 'error');
@@ -478,6 +488,18 @@ function renderUsersList() {
             document.getElementById('admin-edit-target-user').textContent = u;
             document.getElementById('admin-edit-new-username').value = '';
             document.getElementById('admin-edit-new-pass').value = '';
+            const repeatPass = document.getElementById('admin-edit-new-pass-repeat');
+            if (repeatPass) repeatPass.value = '';
+            
+            const aPass = document.getElementById('admin-edit-new-pass');
+            const aEye = document.getElementById('toggle-admin-pass');
+            if (aPass && aEye) {
+                aPass.type = 'password';
+                if (repeatPass) repeatPass.type = 'password';
+                aEye.classList.remove('fa-eye-slash');
+                aEye.classList.add('fa-eye');
+            }
+
             document.getElementById('admin-edit-creds-modal').classList.add('show');
         });
     });
@@ -485,10 +507,38 @@ function renderUsersList() {
 
 document.getElementById('close-admin-edit-creds-modal').onclick = () => document.getElementById('admin-edit-creds-modal').classList.remove('show');
 
+document.getElementById('toggle-normal-pass')?.addEventListener('click', function() {
+    const p1 = document.getElementById('new-pass');
+    const p2 = document.getElementById('new-pass-repeat');
+    if (!p1) return;
+    if (p1.type === 'password') {
+        p1.type = 'text'; if (p2) p2.type = 'text';
+        this.classList.remove('fa-eye'); this.classList.add('fa-eye-slash');
+    } else {
+        p1.type = 'password'; if (p2) p2.type = 'password';
+        this.classList.remove('fa-eye-slash'); this.classList.add('fa-eye');
+    }
+});
+
+document.getElementById('toggle-admin-pass')?.addEventListener('click', function() {
+    const p1 = document.getElementById('admin-edit-new-pass');
+    const p2 = document.getElementById('admin-edit-new-pass-repeat');
+    if (!p1) return;
+    if (p1.type === 'password') {
+        p1.type = 'text'; if (p2) p2.type = 'text';
+        this.classList.remove('fa-eye'); this.classList.add('fa-eye-slash');
+    } else {
+        p1.type = 'password'; if (p2) p2.type = 'password';
+        this.classList.remove('fa-eye-slash'); this.classList.add('fa-eye');
+    }
+});
+
 document.getElementById('btn-admin-save-creds').addEventListener('click', async () => {
     const targetUser = document.getElementById('admin-edit-target-user').textContent;
     const newUsername = document.getElementById('admin-edit-new-username').value.trim().toLowerCase();
     const newPass = document.getElementById('admin-edit-new-pass').value;
+    const repeatPassEl = document.getElementById('admin-edit-new-pass-repeat');
+    const newPassRepeat = repeatPassEl ? repeatPassEl.value : '';
 
     const userData = allUsersData[targetUser];
     if (!userData) return;
@@ -511,6 +561,11 @@ document.getElementById('btn-admin-save-creds').addEventListener('click', async 
 
     if (newPass && newPass.length < 4) {
         showToast('La nueva clave debe tener minimo 4 caracteres', 'error');
+        return;
+    }
+
+    if (newPass && newPass !== newPassRepeat) {
+        showToast('Las claves nuevas no coinciden', 'error');
         return;
     }
 
@@ -876,20 +931,24 @@ function applyRoleBasedConfigUI(isAdmin) {
 
         // Bloquear Piso
         const pisoInput = document.getElementById('cfg_piso');
-        if (pisoInput) pisoInput.readOnly = true;
+        if (pisoInput) { pisoInput.readOnly = true; pisoInput.style.border = 'none'; pisoInput.style.background = 'transparent'; }
 
         // Bloquear Nombre
         const nameInput = document.getElementById('cfg_name');
-        if (nameInput) nameInput.readOnly = true;
+        if (nameInput) { nameInput.readOnly = true; nameInput.style.border = 'none'; nameInput.style.background = 'transparent'; }
 
         // Bloquear Tarifas
         document.querySelectorAll('#tab-tarifas input').forEach(input => {
             input.readOnly = true;
+            input.style.border = 'none';
+            input.style.background = 'transparent';
         });
 
         // Bloquear Salas
         document.querySelectorAll('#tab-salas input').forEach(input => {
             input.readOnly = true;
+            input.style.border = 'none';
+            input.style.background = 'transparent';
         });
     } else {
         // Revertir para admin
@@ -903,13 +962,13 @@ function applyRoleBasedConfigUI(isAdmin) {
         }
 
         const pisoInput = document.getElementById('cfg_piso');
-        if (pisoInput) pisoInput.readOnly = false;
+        if (pisoInput) { pisoInput.readOnly = false; pisoInput.style.border = ''; pisoInput.style.background = ''; }
 
         const nameInput = document.getElementById('cfg_name');
-        if (nameInput) nameInput.readOnly = false;
+        if (nameInput) { nameInput.readOnly = false; nameInput.style.border = ''; nameInput.style.background = ''; }
 
-        document.querySelectorAll('#tab-tarifas input').forEach(input => input.readOnly = false);
-        document.querySelectorAll('#tab-salas input').forEach(input => input.readOnly = false);
+        document.querySelectorAll('#tab-tarifas input').forEach(input => { input.readOnly = false; input.style.border = ''; input.style.background = ''; });
+        document.querySelectorAll('#tab-salas input').forEach(input => { input.readOnly = false; input.style.border = ''; input.style.background = ''; });
     }
 
     const tariffsInputs = document.querySelectorAll('#tab-tarifas input');

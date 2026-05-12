@@ -65,8 +65,13 @@
             <h2>Cambiar Usuario / Clave</h2>
             <input type="password" id="old-pass" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Clave Actual (obligatorio)">
             <input type="text" id="new-username" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Nuevo Usuario (opcional)">
-            <input type="password" id="new-pass" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Nueva Clave (opcional)">
-            <input type="password" id="new-pass-repeat" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Repetir Nueva Clave">
+            <div style="position:relative; width:80%; margin:10px auto;">
+                <input type="password" id="new-pass" class="form-group" style="width:100%;padding:10px;margin:0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Nueva Clave (opcional)">
+                <i class="fa-solid fa-eye" id="toggle-normal-pass" style="position:absolute; right:15px; top:12px; color:var(--text-secondary); cursor:pointer;"></i>
+            </div>
+            <div style="position:relative; width:80%; margin:10px auto;">
+                <input type="password" id="new-pass-repeat" class="form-group" style="width:100%;padding:10px;margin:0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Repetir Nueva Clave">
+            </div>
             <p style="color:var(--text-secondary);font-size:0.8rem;margin:0;">Deja en blanco lo que no quieras cambiar.</p>
             <button id="btn-save-creds" class="btn btn-primary" style="margin-top:15px;"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
         </div>
@@ -117,7 +122,15 @@
             <span class="close-btn" id="close-admin-edit-creds-modal">&times;</span>
             <h2>Editar Usuario: <span id="admin-edit-target-user" style="color:var(--accent-color);"></span></h2>
             <input type="text" id="admin-edit-new-username" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Nuevo Nombre (opcional)">
-            <input type="password" id="admin-edit-new-pass" class="form-group" style="width:80%;padding:10px;margin:10px 0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Nueva Clave (opcional)">
+            
+            <div style="position:relative; width:80%; margin:10px auto;">
+                <input type="password" id="admin-edit-new-pass" class="form-group" style="width:100%;padding:10px;margin:0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Nueva Clave (opcional)">
+                <i class="fa-solid fa-eye" id="toggle-admin-pass" style="position:absolute; right:15px; top:12px; color:var(--text-secondary); cursor:pointer;"></i>
+            </div>
+            
+            <div style="position:relative; width:80%; margin:10px auto;">
+                <input type="password" id="admin-edit-new-pass-repeat" class="form-group" style="width:100%;padding:10px;margin:0;border-radius:5px;border:none;background:rgba(15,23,42,0.6);color:white;" placeholder="Repetir Nueva Clave">
+            </div>
             <p style="color:var(--text-secondary);font-size:0.8rem;margin:0;">Deja en blanco lo que no quieras cambiar. Los datos del usuario (emails, etc) no se perderan al cambiar su nombre.</p>
             <button id="btn-admin-save-creds" class="btn btn-primary" style="margin-top:15px;"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios</button>
         </div>
