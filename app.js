@@ -765,6 +765,7 @@ function renderDevices() {
             <button class="btn btn-primary" onclick="openConfig('${mac}')">
                 <i class="fa-solid fa-gear"></i> ${isAdmin ? 'Configurar Maquina' : 'Ver Maquina'}
             </button>
+            ${isAdmin ? `<button class="btn btn-danger" style="margin-top:0.5rem;" onclick="deleteDevice('${mac}')"><i class="fa-solid fa-trash"></i> Eliminar Equipo</button>` : ''}
         `;
         grid.appendChild(card);
     });
@@ -781,6 +782,19 @@ function renderDevices() {
 // =========================================================================
 // MODAL DE CONFIGURACION
 // =========================================================================
+window.deleteDevice = async function (mac) {
+    const info = globalDevicesData[mac] ? (globalDevicesData[mac].info || {}) : {};
+    const name = info.name || mac;
+    if (confirm(`¿Eliminar "${name}" de la central? El ESP32 lo volvera a registrar al reconectarse.`)) {
+        try {
+            await update(ref(db), { [`devices/${mac}`]: null });
+            showToast(`"${name}" eliminado.`, 'success');
+        } catch (error) {
+            showToast('Error al eliminar dispositivo.', 'error');
+        }
+    }
+};
+
 window.openConfig = function (mac) {
     const device = globalDevicesData[mac];
     if (!device) return;
