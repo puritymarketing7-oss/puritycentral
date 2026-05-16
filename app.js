@@ -841,6 +841,28 @@ window.openConfig = function (mac) {
         if (input) input.value = salas[i];
     }
 
+    // Poblar dropdown de salas para Añadir Horas
+    const addhSala = document.getElementById('addh_sala');
+    if (addhSala) {
+        addhSala.innerHTML = '';
+        let hasSalas = false;
+        for (let i = 0; i < 20; i++) {
+            if (salas[i] > 0) {
+                hasSalas = true;
+                const opt = document.createElement('option');
+                opt.value = salas[i];
+                opt.textContent = `S${i + 1} (HW:${salas[i]})`;
+                addhSala.appendChild(opt);
+            }
+        }
+        if (!hasSalas) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'Sin salas configuradas';
+            addhSala.appendChild(opt);
+        }
+    }
+
     const billetes = stats.billetes || [0, 0, 0, 0];
     for (let i = 0; i < 4; i++) {
         const el = document.getElementById(`hist_bill${i}`);
@@ -1101,6 +1123,37 @@ document.getElementById('btn-reboot').addEventListener('click', async () => {
         } catch (error) {
             showToast('Error al enviar reinicio.', 'error');
         }
+    }
+});
+
+// Display del slider de horas
+document.getElementById('addh_horas').addEventListener('input', function () {
+    document.getElementById('addh_horas_display').textContent = this.value;
+});
+
+// Boton Añadir Horas (admin + usuarios limitados)
+document.getElementById('btn-add-horas').addEventListener('click', async () => {
+    const mac = document.getElementById('edit-mac').value;
+    const salaHw = parseInt(document.getElementById('addh_sala').value);
+    const horas = parseInt(document.getElementById('addh_horas').value);
+
+    if (!salaHw || salaHw <= 0) {
+        showToast('Selecciona una sala con HW asignado.', 'error');
+        return;
+    }
+    if (!horas || horas < 1 || horas > 9) {
+        showToast('Las horas deben ser entre 1 y 9.', 'error');
+        return;
+    }
+
+    const resultEl = document.getElementById('addh-result');
+    if (resultEl) { resultEl.style.display = 'block'; resultEl.textContent = 'Enviando...'; resultEl.style.color = 'var(--text2)'; }
+
+    try {
+        await update(ref(db), { [`devices/${mac}/config/add_horas`]: { sala_hw: salaHw, horas: horas } });
+        if (resultEl) { resultEl.textContent = `${horas}h añadidas a Sala HW:${salaHw}. El ESP32 transmite en el proximo sync.`; resultEl.style.color = 'var(--success-color)'; }
+    } catch (e) {
+        if (resultEl) { resultEl.textContent = 'Error al enviar.'; resultEl.style.color = 'var(--danger-color)'; }
     }
 });
 

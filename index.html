@@ -178,6 +178,26 @@
                         <label>Piso Asignado (1-7)</label>
                         <input type="number" id="cfg_piso" min="1" max="7" required>
                     </div>
+
+                    <div class="panel" style="margin-bottom:1rem;">
+                        <h3><i class="fa-solid fa-clock"></i> Añadir Horas</h3>
+                        <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
+                            <div class="form-group" style="flex:1;min-width:100px;margin:0;">
+                                <label>Sala</label>
+                                <select id="addh_sala" style="width:100%;padding:0.6rem;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:0.9rem;"></select>
+                            </div>
+                            <div class="form-group" style="flex:1;min-width:80px;margin:0;">
+                                <label>Horas</label>
+                                <input type="range" id="addh_horas" min="1" max="9" value="1" style="width:100%;accent-color:var(--accent);">
+                                <div style="text-align:center;font-weight:700;font-size:1.2rem;color:var(--accent);" id="addh_horas_display">1</div>
+                            </div>
+                            <div style="flex:0;min-width:80px;">
+                                <button type="button" id="btn-add-horas" class="btn btn-primary" style="margin:0;padding:0.6rem 1rem;"><i class="fa-solid fa-plus"></i> Añadir</button>
+                            </div>
+                        </div>
+                        <p id="addh-result" style="font-size:0.8rem;margin-top:0.5rem;color:var(--text2);display:none;"></p>
+                    </div>
+
                     <div class="danger-zone">
                         <h3><i class="fa-solid fa-triangle-exclamation"></i> Zona de Peligro</h3>
                         <button type="button" id="btn-reboot" class="btn btn-danger"><i class="fa-solid fa-power-off"></i> Reiniciar Dispositivo</button>
