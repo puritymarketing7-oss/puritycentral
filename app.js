@@ -873,7 +873,11 @@ window.openConfig = function (mac) {
                 const hora = t.hora || 0;
                 if (sala === 0 && hora === 0) return;
                 
-                const fecha = t.fecha || '---';
+                const fechaRaw = t.fecha || '---';
+                let fecha = fechaRaw;
+                if (fechaRaw !== '---') {
+                    try { const d = new Date(fechaRaw); if (!isNaN(d.getTime())) fecha = d.toLocaleString(); } catch(e) {}
+                }
                 const b500 = t.b500 || 0;
                 const b1000 = t.b1000 || 0;
                 const b2000 = t.b2000 || 0;
@@ -908,7 +912,11 @@ window.openConfig = function (mac) {
         } else {
             qrTbody.innerHTML = '';
             historial_qr.forEach((t, idx) => {
-                const fecha = t.fecha || '---';
+                const fechaRaw = t.fecha || '---';
+                let fecha = fechaRaw;
+                if (fechaRaw !== '---') {
+                    try { const d = new Date(fechaRaw); if (!isNaN(d.getTime())) fecha = d.toLocaleString(); } catch(e) {}
+                }
                 const sala = t.sala || 0;
                 const horas = t.horas || t.hora || 0;
                 const total = t.total || 0;
