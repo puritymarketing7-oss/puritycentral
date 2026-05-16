@@ -732,6 +732,7 @@ function renderDevices() {
         const cfg = device.config || {};
 
         const isOnline = (now - (info.last_seen || 0)) < 120;
+        console.log(`[DEVICE] ${mac}: now=${now} last_seen=${info.last_seen} diff=${now - (info.last_seen || 0)} online=${isOnline}`);
         const statusClass = isOnline ? 'online' : 'offline';
         const statusText = isOnline ? 'Online' : 'Offline';
 
