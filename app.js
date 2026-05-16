@@ -58,6 +58,17 @@ initSalasInputs();
 let tariffSyncLock = false;
 function setupTariffSync() {
     const basePesos = document.getElementById('cfg_pesos_1h');
+    const precioPulso = document.getElementById('cfg_precio_pulso');
+
+    function updatePrecios() {
+        const pp = parseInt(precioPulso.value) || 0;
+        for (let i = 0; i < 4; i++) {
+            const p = parseInt(document.getElementById(`cfg_p${i}`).value) || 0;
+            const el = document.getElementById(`cfg_precio${i}`);
+            if (el) el.value = p > 0 ? '$' + (p * pp).toLocaleString() : '-';
+        }
+    }
+
     for (let i = 0; i < 4; i++) {
         const hInput = document.getElementById(`cfg_h${i}`);
         const pInput = document.getElementById(`cfg_p${i}`);
@@ -70,6 +81,7 @@ function setupTariffSync() {
             const horas = parseInt(hInput.value) || 0;
             const base = parseInt(basePesos.value) || 0;
             pInput.value = horas * base;
+            updatePrecios();
             validarJerarquiaTarifas();
             tariffSyncLock = false;
         });
@@ -79,7 +91,6 @@ function setupTariffSync() {
             if (tariffSyncLock) return;
             tariffSyncLock = true;
             let pulsos = parseInt(pInput.value) || 0;
-            // Clamp pulsos para que sea > promo anterior
             if (i > 0) {
                 const prevP = parseInt(document.getElementById(`cfg_p${i-1}`).value) || 0;
                 const prevH = parseInt(document.getElementById(`cfg_h${i-1}`).value) || 0;
@@ -90,6 +101,7 @@ function setupTariffSync() {
             }
             const base = parseInt(basePesos.value) || 1;
             hInput.value = Math.floor(pulsos / base);
+            updatePrecios();
             validarJerarquiaTarifas();
             tariffSyncLock = false;
         });
@@ -157,6 +169,9 @@ function obtenerErroresTarifas() {
         lastP = p;
     }
     return errores;
+    // precio_pulso cambia -> actualizar todos los precios
+    precioPulso.addEventListener('input', () => updatePrecios());
+    basePesos.addEventListener('input', () => updatePrecios());
 }
 setupTariffSync();
 
@@ -830,9 +845,12 @@ window.openConfig = function (mac) {
 
     const horas = cfg.horas || [0, 0, 0, 0];
     const pesos = cfg.pesos || [0, 0, 0, 0];
+    const pp = cfg.precio_pulso || 100;
     for (let i = 0; i < 4; i++) {
         document.getElementById(`cfg_h${i}`).value = horas[i];
         document.getElementById(`cfg_p${i}`).value = pesos[i];
+        const precioEl = document.getElementById(`cfg_precio${i}`);
+        if (precioEl) precioEl.value = pesos[i] > 0 ? '$' + (pesos[i] * pp).toLocaleString() : '-';
     }
 
     const salas = (cfg.salas || Array(20).fill(0)).map(v => Math.max(0, Math.min(31, parseInt(v) || 0)));
