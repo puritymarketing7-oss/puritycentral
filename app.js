@@ -841,27 +841,9 @@ window.openConfig = function (mac) {
         if (input) input.value = salas[i];
     }
 
-    // Poblar dropdown de salas para Añadir Horas
-    const addhSala = document.getElementById('addh_sala');
-    if (addhSala) {
-        addhSala.innerHTML = '';
-        let hasSalas = false;
-        for (let i = 0; i < 20; i++) {
-            if (salas[i] > 0) {
-                hasSalas = true;
-                const opt = document.createElement('option');
-                opt.value = salas[i];
-                opt.textContent = `S${i + 1} (HW:${salas[i]})`;
-                addhSala.appendChild(opt);
-            }
-        }
-        if (!hasSalas) {
-            const opt = document.createElement('option');
-            opt.value = '';
-            opt.textContent = 'Sin salas configuradas';
-            addhSala.appendChild(opt);
-        }
-    }
+    // Prellenar piso en el campo Añadir Horas
+    const addhPiso = document.getElementById('addh_piso');
+    if (addhPiso) addhPiso.value = cfg.piso || 1;
 
     const billetes = stats.billetes || [0, 0, 0, 0];
     for (let i = 0; i < 4; i++) {
@@ -1126,34 +1108,20 @@ document.getElementById('btn-reboot').addEventListener('click', async () => {
     }
 });
 
-// Display del slider de horas
-document.getElementById('addh_horas').addEventListener('input', function () {
-    document.getElementById('addh_horas_display').textContent = this.value;
-});
-
 // Boton Añadir Horas (admin + usuarios limitados)
 document.getElementById('btn-add-horas').addEventListener('click', async () => {
     const mac = document.getElementById('edit-mac').value;
-    const salaHw = parseInt(document.getElementById('addh_sala').value);
-    const horas = parseInt(document.getElementById('addh_horas').value);
+    const sala = Math.max(0, Math.min(31, parseInt(document.getElementById('addh_sala').value) || 0));
+    const piso = Math.max(1, Math.min(7, parseInt(document.getElementById('addh_piso').value) || 1));
+    const horas = Math.max(1, Math.min(9, parseInt(document.getElementById('addh_horas').value) || 1));
 
-    if (!salaHw || salaHw <= 0) {
-        showToast('Selecciona una sala con HW asignado.', 'error');
-        return;
-    }
-    if (!horas || horas < 1 || horas > 9) {
-        showToast('Las horas deben ser entre 1 y 9.', 'error');
-        return;
-    }
-
-    const resultEl = document.getElementById('addh-result');
-    if (resultEl) { resultEl.style.display = 'block'; resultEl.textContent = 'Enviando...'; resultEl.style.color = 'var(--text2)'; }
+    if (sala === 0) { showToast('Ingresa un numero de Sala (1-31).', 'error'); return; }
 
     try {
-        await update(ref(db), { [`devices/${mac}/config/add_horas`]: { sala_hw: salaHw, horas: horas } });
-        if (resultEl) { resultEl.textContent = `${horas}h añadidas a Sala HW:${salaHw}. El ESP32 transmite en el proximo sync.`; resultEl.style.color = 'var(--success-color)'; }
+        await update(ref(db), { [`devices/${mac}/config/add_horas`]: { sala_hw: sala, piso: piso, horas: horas } });
+        showToast(`${horas}h enviadas a Piso ${piso} Sala ${sala}.`, 'success');
     } catch (e) {
-        if (resultEl) { resultEl.textContent = 'Error al enviar.'; resultEl.style.color = 'var(--danger-color)'; }
+        showToast('Error al enviar.', 'error');
     }
 });
 

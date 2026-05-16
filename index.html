@@ -179,23 +179,23 @@
                         <input type="number" id="cfg_piso" min="1" max="7" required>
                     </div>
 
-                    <div class="panel" style="margin-bottom:1rem;">
-                        <h3><i class="fa-solid fa-clock"></i> Añadir Horas</h3>
-                        <div style="display:flex;gap:0.5rem;align-items:flex-end;flex-wrap:wrap;">
-                            <div class="form-group" style="flex:1;min-width:100px;margin:0;">
-                                <label>Sala</label>
-                                <select id="addh_sala" style="width:100%;padding:0.6rem;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:0.9rem;"></select>
+                    <div style="border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1rem;">
+                        <h3 style="margin:0 0 0.75rem 0;font-size:0.95rem;color:var(--accent);"><i class="fa-solid fa-clock"></i> Añadir Horas</h3>
+                        <div style="display:flex;gap:0.5rem;align-items:flex-end;">
+                            <div class="form-group" style="flex:1;min-width:60px;margin:0;">
+                                <label style="font-size:0.75rem;">Sala HW</label>
+                                <input type="number" id="addh_sala" min="0" max="31" value="0" style="padding:0.5rem;text-align:center;">
                             </div>
-                            <div class="form-group" style="flex:1;min-width:80px;margin:0;">
-                                <label>Horas</label>
-                                <input type="range" id="addh_horas" min="1" max="9" value="1" style="width:100%;accent-color:var(--accent);">
-                                <div style="text-align:center;font-weight:700;font-size:1.2rem;color:var(--accent);" id="addh_horas_display">1</div>
+                            <div class="form-group" style="flex:1;min-width:60px;margin:0;">
+                                <label style="font-size:0.75rem;">Piso</label>
+                                <input type="number" id="addh_piso" min="1" max="7" value="1" style="padding:0.5rem;text-align:center;">
                             </div>
-                            <div style="flex:0;min-width:80px;">
-                                <button type="button" id="btn-add-horas" class="btn btn-primary" style="margin:0;padding:0.6rem 1rem;"><i class="fa-solid fa-plus"></i> Añadir</button>
+                            <div class="form-group" style="flex:1;min-width:60px;margin:0;">
+                                <label style="font-size:0.75rem;">Horas</label>
+                                <input type="number" id="addh_horas" min="1" max="9" value="1" style="padding:0.5rem;text-align:center;">
                             </div>
+                            <button type="button" id="btn-add-horas" class="btn btn-primary" style="flex:0;margin:0;padding:0.5rem 0.75rem;font-size:0.85rem;"><i class="fa-solid fa-plus"></i></button>
                         </div>
-                        <p id="addh-result" style="font-size:0.8rem;margin-top:0.5rem;color:var(--text2);display:none;"></p>
                     </div>
 
                     <div class="danger-zone">
