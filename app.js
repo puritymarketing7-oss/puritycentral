@@ -57,27 +57,64 @@ initSalasInputs();
 // =========================================================================
 let tariffSyncLock = false;
 function setupTariffSync() {
+    const basePesos = document.getElementById('cfg_pesos_1h');
     const precioPulso = document.getElementById('cfg_precio_pulso');
+    let syncLock = false;
 
-    function updatePrecios() {
-        const pp = parseInt(precioPulso.value) || 0;
-        for (let i = 0; i < 4; i++) {
-            const p = parseInt(document.getElementById(`cfg_p${i}`).value) || 0;
-            const el = document.getElementById(`cfg_precio${i}`);
-            if (el) el.value = p > 0 ? '$' + (p * pp).toLocaleString() : '-';
-        }
+    function updatePulsos(i) {
+        const precio = parseInt(document.getElementById(`cfg_precio${i}`).value) || 0;
+        const pp = parseInt(precioPulso.value) || 1;
+        const pEl = document.getElementById(`cfg_p${i}`);
+        if (pEl) pEl.value = Math.floor(precio / pp);
     }
 
     for (let i = 0; i < 4; i++) {
         const hInput = document.getElementById(`cfg_h${i}`);
-        const pInput = document.getElementById(`cfg_p${i}`);
-        if (!hInput || !pInput) continue;
+        const precInput = document.getElementById(`cfg_precio${i}`);
+        if (!hInput || !precInput) continue;
 
-        hInput.addEventListener('input', () => { updatePrecios(); validarJerarquiaTarifas(); });
-        pInput.addEventListener('input', () => { updatePrecios(); validarJerarquiaTarifas(); });
+        // Horas cambia -> actualizar Precio y Pulsos
+        hInput.addEventListener('input', () => {
+            if (syncLock) return;
+            syncLock = true;
+            const horas = parseInt(hInput.value) || 0;
+            const base = parseInt(basePesos.value) || 0;
+            const pp = parseInt(precioPulso.value) || 0;
+            precInput.value = horas * base * pp;
+            updatePulsos(i);
+            validarJerarquiaTarifas();
+            syncLock = false;
+        });
+
+        // Precio cambia -> actualizar Horas y Pulsos
+        precInput.addEventListener('input', () => {
+            if (syncLock) return;
+            syncLock = true;
+            const precio = parseInt(precInput.value) || 0;
+            const base = parseInt(basePesos.value) || 1;
+            const pp = parseInt(precioPulso.value) || 1;
+            const costoHora = base * pp;
+            hInput.value = Math.floor(precio / costoHora);
+            updatePulsos(i);
+            validarJerarquiaTarifas();
+            syncLock = false;
+        });
     }
 
-    precioPulso.addEventListener('input', () => updatePrecios());
+    // basePesos o precioPulso cambian -> actualizar Precios y Pulsos de todas las promos
+    [basePesos, precioPulso].forEach(el => {
+        el.addEventListener('input', () => {
+            for (let i = 0; i < 4; i++) {
+                const h = parseInt(document.getElementById(`cfg_h${i}`).value) || 0;
+                const base = parseInt(basePesos.value) || 0;
+                const pp = parseInt(precioPulso.value) || 0;
+                const precEl = document.getElementById(`cfg_precio${i}`);
+                if (precEl && h > 0) precEl.value = h * base * pp;
+                updatePulsos(i);
+            }
+            validarJerarquiaTarifas();
+        });
+    });
 }
 
 function validarJerarquiaTarifas() {
@@ -803,9 +840,9 @@ window.openConfig = function (mac) {
     const pp = cfg.precio_pulso || 100;
     for (let i = 0; i < 4; i++) {
         document.getElementById(`cfg_h${i}`).value = horas[i];
+        const precEl = document.getElementById(`cfg_precio${i}`);
+        if (precEl) precEl.value = pesos[i] > 0 ? pesos[i] * pp : 0;
         document.getElementById(`cfg_p${i}`).value = pesos[i];
-        const precioEl = document.getElementById(`cfg_precio${i}`);
-        if (precioEl) precioEl.value = pesos[i] > 0 ? '$' + (pesos[i] * pp).toLocaleString() : '-';
     }
 
     const salas = (cfg.salas || Array(20).fill(0)).map(v => Math.max(0, Math.min(31, parseInt(v) || 0)));
@@ -1045,9 +1082,11 @@ form.addEventListener('submit', async (e) => {
         updates[`devices/${mac}/info/name`] = document.getElementById('cfg_name').value;
 
         const horas = [], pesos = [], salas = [];
+        const ppSave = parseInt(document.getElementById('cfg_precio_pulso').value) || 1;
         for (let i = 0; i < 4; i++) {
             horas.push(parseInt(document.getElementById(`cfg_h${i}`).value) || 0);
-            pesos.push(parseInt(document.getElementById(`cfg_p${i}`).value) || 0);
+            const prec = parseInt(document.getElementById(`cfg_precio${i}`).value) || 0;
+            pesos.push(Math.floor(prec / ppSave));
         }
         for (let i = 0; i < 20; i++) {
             const v = parseInt(document.getElementById(`cfg_s${i}`).value) || 0;
