@@ -55,11 +55,8 @@ initSalasInputs();
 // =========================================================================
 // AUTO-COMPLETAR TARIFAS PROPORCIONALES
 // =========================================================================
-let tariffSyncLock = false;
 function setupTariffSync() {
-    const basePesos = document.getElementById('cfg_pesos_1h');
     const precioPulso = document.getElementById('cfg_precio_pulso');
-    let syncLock = false;
 
     function updatePulsos(i) {
         const prec = parseInt(document.getElementById(`cfg_precio${i}`).value) || 0;
@@ -68,51 +65,20 @@ function setupTariffSync() {
         if (pEl) pEl.textContent = Math.floor(prec / pp);
     }
 
+    function updateAllPulsos() {
+        for (let i = 0; i < 4; i++) updatePulsos(i);
+    }
+
     for (let i = 0; i < 4; i++) {
         const hInput = document.getElementById(`cfg_h${i}`);
         const precInput = document.getElementById(`cfg_precio${i}`);
         if (!hInput || !precInput) continue;
 
-        // Horas cambia -> actualizar Precio y Pulsos
-        hInput.addEventListener('input', () => {
-            if (syncLock) return;
-            syncLock = true;
-            const horas = parseInt(hInput.value) || 0;
-            const base = parseInt(basePesos.value) || 0;
-            const pp = parseInt(precioPulso.value) || 0;
-            precInput.value = horas * base * pp;
-            updatePulsos(i);
-            validarJerarquiaTarifas();
-            syncLock = false;
-        });
-
-        // Precio cambia -> actualizar Horas y Pulsos
-        precInput.addEventListener('input', () => {
-            if (syncLock) return;
-            syncLock = true;
-            const precio = parseInt(precInput.value) || 0;
-            const base = parseInt(basePesos.value) || 1;
-            const pp = parseInt(precioPulso.value) || 1;
-            hInput.value = Math.floor(precio / (base * pp));
-            updatePulsos(i);
-            validarJerarquiaTarifas();
-            syncLock = false;
-        });
+        hInput.addEventListener('input', () => validarJerarquiaTarifas());
+        precInput.addEventListener('input', () => { updatePulsos(i); validarJerarquiaTarifas(); });
     }
 
-    [basePesos, precioPulso].forEach(el => {
-        el.addEventListener('input', () => {
-            for (let i = 0; i < 4; i++) {
-                const h = parseInt(document.getElementById(`cfg_h${i}`).value) || 0;
-                const base = parseInt(basePesos.value) || 0;
-                const pp = parseInt(precioPulso.value) || 0;
-                const precEl = document.getElementById(`cfg_precio${i}`);
-                if (precEl && h > 0) precEl.value = h * base * pp;
-                updatePulsos(i);
-            }
-            validarJerarquiaTarifas();
-        });
-    });
+    precioPulso.addEventListener('input', updateAllPulsos);
 }
 
 function validarJerarquiaTarifas() {
