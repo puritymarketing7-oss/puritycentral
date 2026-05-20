@@ -65,7 +65,7 @@ function setupTariffSync() {
         const prec = parseInt(document.getElementById(`cfg_precio${i}`).value) || 0;
         const pp = parseInt(precioPulso.value) || 1;
         const pEl = document.getElementById(`cfg_p${i}`);
-        if (pEl) pEl.value = Math.floor(prec / pp);
+        if (pEl) pEl.textContent = Math.floor(prec / pp);
     }
 
     for (let i = 0; i < 4; i++) {
@@ -838,7 +838,7 @@ window.openConfig = function (mac) {
         const precEl = document.getElementById(`cfg_precio${i}`);
         if (precEl) precEl.value = pesos[i] > 0 ? pesos[i] * pp : 0;
         const pEl = document.getElementById(`cfg_p${i}`);
-        if (pEl) pEl.value = pesos[i];
+        if (pEl) pEl.textContent = pesos[i];
     }
 
     const salas = (cfg.salas || Array(20).fill(0)).map(v => Math.max(0, Math.min(31, parseInt(v) || 0)));

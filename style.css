@@ -745,6 +745,20 @@ input:checked+.slider:before {
     margin: 1px;
 }
 
+/* Pulsos display (read-only in tariffs) */
+.pulsos-display {
+    display: block;
+    width: 100%;
+    padding: 0.6rem;
+    background: rgba(15, 23, 42, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-family: monospace;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .container {
