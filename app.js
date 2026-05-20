@@ -61,12 +61,19 @@ function setupTariffSync() {
     const precioPulso = document.getElementById('cfg_precio_pulso');
     let syncLock = false;
 
+    function updatePulsos(i) {
+        const prec = parseInt(document.getElementById(`cfg_precio${i}`).value) || 0;
+        const pp = parseInt(precioPulso.value) || 1;
+        const pEl = document.getElementById(`cfg_p${i}`);
+        if (pEl) pEl.value = Math.floor(prec / pp);
+    }
+
     for (let i = 0; i < 4; i++) {
         const hInput = document.getElementById(`cfg_h${i}`);
         const precInput = document.getElementById(`cfg_precio${i}`);
         if (!hInput || !precInput) continue;
 
-        // Horas cambia -> actualizar Precio
+        // Horas cambia -> actualizar Precio y Pulsos
         hInput.addEventListener('input', () => {
             if (syncLock) return;
             syncLock = true;
@@ -74,11 +81,12 @@ function setupTariffSync() {
             const base = parseInt(basePesos.value) || 0;
             const pp = parseInt(precioPulso.value) || 0;
             precInput.value = horas * base * pp;
+            updatePulsos(i);
             validarJerarquiaTarifas();
             syncLock = false;
         });
 
-        // Precio cambia -> actualizar Horas
+        // Precio cambia -> actualizar Horas y Pulsos
         precInput.addEventListener('input', () => {
             if (syncLock) return;
             syncLock = true;
@@ -86,12 +94,12 @@ function setupTariffSync() {
             const base = parseInt(basePesos.value) || 1;
             const pp = parseInt(precioPulso.value) || 1;
             hInput.value = Math.floor(precio / (base * pp));
+            updatePulsos(i);
             validarJerarquiaTarifas();
             syncLock = false;
         });
     }
 
-    // basePesos o precioPulso cambian -> actualizar Precios de todas las promos
     [basePesos, precioPulso].forEach(el => {
         el.addEventListener('input', () => {
             for (let i = 0; i < 4; i++) {
@@ -100,6 +108,7 @@ function setupTariffSync() {
                 const pp = parseInt(precioPulso.value) || 0;
                 const precEl = document.getElementById(`cfg_precio${i}`);
                 if (precEl && h > 0) precEl.value = h * base * pp;
+                updatePulsos(i);
             }
             validarJerarquiaTarifas();
         });
@@ -828,6 +837,8 @@ window.openConfig = function (mac) {
         document.getElementById(`cfg_h${i}`).value = horas[i];
         const precEl = document.getElementById(`cfg_precio${i}`);
         if (precEl) precEl.value = pesos[i] > 0 ? pesos[i] * pp : 0;
+        const pEl = document.getElementById(`cfg_p${i}`);
+        if (pEl) pEl.value = pesos[i];
     }
 
     const salas = (cfg.salas || Array(20).fill(0)).map(v => Math.max(0, Math.min(31, parseInt(v) || 0)));
