@@ -61,19 +61,12 @@ function setupTariffSync() {
     const precioPulso = document.getElementById('cfg_precio_pulso');
     let syncLock = false;
 
-    function updatePulsos(i) {
-        const precio = parseInt(document.getElementById(`cfg_precio${i}`).value) || 0;
-        const pp = parseInt(precioPulso.value) || 1;
-        const pEl = document.getElementById(`cfg_p${i}`);
-        if (pEl) pEl.value = Math.floor(precio / pp);
-    }
-
     for (let i = 0; i < 4; i++) {
         const hInput = document.getElementById(`cfg_h${i}`);
         const precInput = document.getElementById(`cfg_precio${i}`);
         if (!hInput || !precInput) continue;
 
-        // Horas cambia -> actualizar Precio y Pulsos
+        // Horas cambia -> actualizar Precio
         hInput.addEventListener('input', () => {
             if (syncLock) return;
             syncLock = true;
@@ -81,27 +74,24 @@ function setupTariffSync() {
             const base = parseInt(basePesos.value) || 0;
             const pp = parseInt(precioPulso.value) || 0;
             precInput.value = horas * base * pp;
-            updatePulsos(i);
             validarJerarquiaTarifas();
             syncLock = false;
         });
 
-        // Precio cambia -> actualizar Horas y Pulsos
+        // Precio cambia -> actualizar Horas
         precInput.addEventListener('input', () => {
             if (syncLock) return;
             syncLock = true;
             const precio = parseInt(precInput.value) || 0;
             const base = parseInt(basePesos.value) || 1;
             const pp = parseInt(precioPulso.value) || 1;
-            const costoHora = base * pp;
-            hInput.value = Math.floor(precio / costoHora);
-            updatePulsos(i);
+            hInput.value = Math.floor(precio / (base * pp));
             validarJerarquiaTarifas();
             syncLock = false;
         });
     }
 
-    // basePesos o precioPulso cambian -> actualizar Precios y Pulsos de todas las promos
+    // basePesos o precioPulso cambian -> actualizar Precios de todas las promos
     [basePesos, precioPulso].forEach(el => {
         el.addEventListener('input', () => {
             for (let i = 0; i < 4; i++) {
@@ -110,7 +100,6 @@ function setupTariffSync() {
                 const pp = parseInt(precioPulso.value) || 0;
                 const precEl = document.getElementById(`cfg_precio${i}`);
                 if (precEl && h > 0) precEl.value = h * base * pp;
-                updatePulsos(i);
             }
             validarJerarquiaTarifas();
         });
@@ -118,48 +107,50 @@ function setupTariffSync() {
 }
 
 function validarJerarquiaTarifas() {
-    let lastH = -1, lastP = -1;
+    let lastH = -1, lastPrecio = -1;
     for (let i = 0; i < 4; i++) {
         const h = parseInt(document.getElementById(`cfg_h${i}`).value) || 0;
-        const p = parseInt(document.getElementById(`cfg_p${i}`).value) || 0;
+        const prec = parseInt(document.getElementById(`cfg_precio${i}`).value) || 0;
         const hInput = document.getElementById(`cfg_h${i}`);
-        const pInput = document.getElementById(`cfg_p${i}`);
+        const precInput = document.getElementById(`cfg_precio${i}`);
 
-        if (h === 0 && p === 0) continue; // promo deshabilitada (saltar)
+        if (h === 0 && prec === 0) continue;
 
         let error = false;
-        if (h > 0 && p > 0) {
+        if (h > 0 && prec > 0) {
             if (h <= lastH) error = true;
-            if (p <= lastP) error = true;
+            if (prec <= lastPrecio) error = true;
         }
 
-        if (h > 0 && p === 0) error = true;
-        if (p > 0 && h === 0) error = true;
+        if (h > 0 && prec === 0) error = true;
+        if (prec > 0 && h === 0) error = true;
 
-        hInput.style.borderColor = error ? 'var(--danger-color)' : '';
-        pInput.style.borderColor = error ? 'var(--danger-color)' : '';
+        if (hInput) hInput.style.borderColor = error ? 'var(--danger-color)' : '';
+        if (precInput) precInput.style.borderColor = error ? 'var(--danger-color)' : '';
 
-        if (h > 0 && p > 0) {
+        if (h > 0 && prec > 0) {
             lastH = h;
-            lastP = p;
+            lastPrecio = prec;
         }
     }
 }
 
 function obtenerErroresTarifas() {
-    let lastH = -1, lastP = -1;
+    let lastH = -1, lastPrecio = -1;
     const errores = [];
     for (let i = 0; i < 4; i++) {
         const h = parseInt(document.getElementById(`cfg_h${i}`).value) || 0;
-        const p = parseInt(document.getElementById(`cfg_p${i}`).value) || 0;
-        if (h === 0 && p === 0) continue;
-        if (h === 0 && p > 0) { errores.push(`Opcion ${i+1}: tiene Pulsos pero Horas=0`); continue; }
-        if (p === 0 && h > 0) { errores.push(`Opcion ${i+1}: tiene Horas pero Pulsos=0`); continue; }
-        if (h <= lastH) errores.push(`Opcion ${i+1}: Horas (${h}) debe ser > Horas Opcion anterior (${lastH})`);
-        if (p <= lastP) errores.push(`Opcion ${i+1}: Pulsos (${p}) debe ser > Pulsos Opcion anterior (${lastP})`);
+        const prec = parseInt(document.getElementById(`cfg_precio${i}`).value) || 0;
+        if (h === 0 && prec === 0) continue;
+        if (h === 0 && prec > 0) { errores.push(`Promo ${i+1}: tiene Precio pero Horas=0`); continue; }
+        if (prec === 0 && h > 0) { errores.push(`Promo ${i+1}: tiene Horas pero Precio=0`); continue; }
+        if (h <= lastH) errores.push(`Promo ${i+1}: Horas (${h}) debe ser > Horas Promo anterior (${lastH})`);
+        if (prec <= lastPrecio) errores.push(`Promo ${i+1}: Precio ($${prec}) debe ser > Precio Promo anterior ($${lastPrecio})`);
         lastH = h;
-        lastP = p;
+        lastPrecio = prec;
     }
+    return errores;
+}
     return errores;
     // precio_pulso cambia -> actualizar todos los precios
     precioPulso.addEventListener('input', () => updatePrecios());
