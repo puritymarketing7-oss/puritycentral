@@ -57,7 +57,6 @@ initSalasInputs();
 // =========================================================================
 let tariffSyncLock = false;
 function setupTariffSync() {
-    const basePesos = document.getElementById('cfg_pesos_1h');
     const precioPulso = document.getElementById('cfg_precio_pulso');
 
     function updatePrecios() {
@@ -74,55 +73,11 @@ function setupTariffSync() {
         const pInput = document.getElementById(`cfg_p${i}`);
         if (!hInput || !pInput) continue;
 
-        // Horas cambia -> actualizar Pulsos
-        hInput.addEventListener('input', () => {
-            if (tariffSyncLock) return;
-            tariffSyncLock = true;
-            const horas = parseInt(hInput.value) || 0;
-            const base = parseInt(basePesos.value) || 0;
-            pInput.value = horas * base;
-            updatePrecios();
-            validarJerarquiaTarifas();
-            tariffSyncLock = false;
-        });
-
-        // Pulsos cambia -> actualizar Horas
-        pInput.addEventListener('input', () => {
-            if (tariffSyncLock) return;
-            tariffSyncLock = true;
-            let pulsos = parseInt(pInput.value) || 0;
-            if (i > 0) {
-                const prevP = parseInt(document.getElementById(`cfg_p${i-1}`).value) || 0;
-                const prevH = parseInt(document.getElementById(`cfg_h${i-1}`).value) || 0;
-                if (prevH > 0 && prevP > 0 && pulsos > 0 && pulsos <= prevP) {
-                    pulsos = prevP + 1;
-                    pInput.value = pulsos;
-                }
-            }
-            const base = parseInt(basePesos.value) || 1;
-            hInput.value = Math.floor(pulsos / base);
-            updatePrecios();
-            validarJerarquiaTarifas();
-            tariffSyncLock = false;
-        });
-
-        // Horas cambia -> clamp a >= promo anterior
-        hInput.addEventListener('change', () => {
-            let horas = parseInt(hInput.value) || 0;
-            if (i > 0 && horas > 0) {
-                const prevH = parseInt(document.getElementById(`cfg_h${i-1}`).value) || 0;
-                if (prevH > 0 && horas <= prevH) {
-                    horas = prevH + 1;
-                    hInput.value = horas;
-                    tariffSyncLock = true;
-                    const base = parseInt(basePesos.value) || 0;
-                    document.getElementById(`cfg_p${i}`).value = horas * base;
-                    tariffSyncLock = false;
-                }
-            }
-            validarJerarquiaTarifas();
-        });
+        hInput.addEventListener('input', () => { updatePrecios(); validarJerarquiaTarifas(); });
+        pInput.addEventListener('input', () => { updatePrecios(); validarJerarquiaTarifas(); });
     }
+
+    precioPulso.addEventListener('input', () => updatePrecios());
 }
 
 function validarJerarquiaTarifas() {
