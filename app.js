@@ -828,7 +828,6 @@ window.openConfig = function (mac) {
         document.getElementById(`cfg_h${i}`).value = horas[i];
         const precEl = document.getElementById(`cfg_precio${i}`);
         if (precEl) precEl.value = pesos[i] > 0 ? pesos[i] * pp : 0;
-        document.getElementById(`cfg_p${i}`).value = pesos[i];
     }
 
     const salas = (cfg.salas || Array(20).fill(0)).map(v => Math.max(0, Math.min(31, parseInt(v) || 0)));
