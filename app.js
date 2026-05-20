@@ -151,11 +151,6 @@ function obtenerErroresTarifas() {
     }
     return errores;
 }
-    return errores;
-    // precio_pulso cambia -> actualizar todos los precios
-    precioPulso.addEventListener('input', () => updatePrecios());
-    basePesos.addEventListener('input', () => updatePrecios());
-}
 setupTariffSync();
 
 // =========================================================================
